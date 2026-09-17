@@ -101,6 +101,7 @@
         <table class="w-full text-left text-sm border-collapse">
           <thead>
             <tr class="bg-slate-100 border-b border-slate-200 text-slate-600">
+              <th class="p-3">Photo</th>
               <th class="p-3">ID</th>
               <th class="p-3">Name</th>
               <th class="p-3">Gender</th>
@@ -163,6 +164,17 @@
       <h3 id="formModalTitle" class="text-xl font-bold text-slate-900 mb-4">Add Rishta Proposal</h3>
       <form id="proposalForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
         <input type="hidden" id="editProposalId">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Profile Photo</label>
+          <input type="file" id="inputPhotoFile" accept="image/*" onchange="handleImageUpload(event)" class="w-full border border-slate-300 rounded-lg p-2 text-xs text-slate-500 focus:outline-emerald-600 mb-2">
+          <input type="hidden" id="inputPhotoUrl">
+          <div id="photoPreviewContainer" class="hidden items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
+            <img id="photoPreview" src="" class="w-12 h-12 object-cover rounded-md border border-slate-300">
+            <span class="text-xs text-slate-500">Photo attached successfully</span>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
@@ -237,10 +249,10 @@
     };
 
     let proposals = [
-      { id: 'PAK-001', name: 'Ayesha Khan', gender: 'Bride', age: 25, district: 'Bagh', description: 'Software Engineer holding a Master degree from NUST. Belongs to an educated family background.', phone: '+92 300 1234567' },
-      { id: 'PAK-002', name: 'Usman Ali', gender: 'Groom', age: 28, district: 'Bhimber', description: 'Civil Engineer currently working on infrastructure projects. Seeking a well-educated match.', phone: '+92 321 7654321' },
-      { id: 'PAK-003', name: 'Fatima Ahmed', gender: 'Bride', age: 24, district: 'Kotli', description: 'Medical Doctor (MBBS) undergoing residency. Prefers a partner working in healthcare or IT.', phone: '+92 333 9876543' },
-      { id: 'PAK-004', name: 'Bilal Malik', gender: 'Groom', age: 30, district: 'Bagh', description: 'Chartered Accountant based in Islamabad. Family resides in Bagh.', phone: '+92 312 4567890' }
+      { id: 'PAK-001', name: 'Ayesha Khan', gender: 'Bride', age: 25, district: 'Bagh', description: 'Software Engineer holding a Master degree from NUST. Belongs to an educated family background.', phone: '+92 300 1234567', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80' },
+      { id: 'PAK-002', name: 'Usman Ali', gender: 'Groom', age: 28, district: 'Bhimber', description: 'Civil Engineer currently working on infrastructure projects. Seeking a well-educated match.', phone: '+92 321 7654321', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80' },
+      { id: 'PAK-003', name: 'Fatima Ahmed', gender: 'Bride', age: 24, district: 'Kotli', description: 'Medical Doctor (MBBS) undergoing residency. Prefers a partner working in healthcare or IT.', phone: '+92 333 9876543', photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80' },
+      { id: 'PAK-004', name: 'Bilal Malik', gender: 'Groom', age: 30, district: 'Bagh', description: 'Chartered Accountant based in Islamabad. Family resides in Bagh.', phone: '+92 312 4567890', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80' }
     ];
 
     let isAdminLoggedIn = false;
@@ -290,24 +302,28 @@
       }
 
       data.forEach(p => {
+        const photoSrc = p.photo || 'https://via.placeholder.com/300x300?text=No+Photo';
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between hover:shadow-md transition';
+        card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between hover:shadow-md transition';
         card.innerHTML = `
           <div>
-            <div class="flex justify-between items-start mb-3">
-              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${p.gender === 'Bride' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">
+            <div class="relative h-48 w-full bg-slate-100 overflow-hidden">
+              <img src="${photoSrc}" alt="${p.name}" class="w-full h-full object-cover">
+              <span class="absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${p.gender === 'Bride' ? 'bg-pink-100/90 text-pink-700' : 'bg-blue-100/90 text-blue-700'} backdrop-blur-sm">
                 ${p.gender}
               </span>
-              <span class="text-xs text-slate-400 font-mono">${p.id}</span>
+              <span class="absolute top-3 right-3 text-xs text-white bg-slate-900/60 font-mono px-2 py-0.5 rounded backdrop-blur-sm">${p.id}</span>
             </div>
-            <h4 class="text-lg font-bold text-slate-900">${p.name}</h4>
-            <div class="mt-2 space-y-1.5 text-sm text-slate-600">
-              <p><i class="fa-solid fa-cake-candles text-slate-400 w-4 me-1"></i> ${p.age} years old</p>
-              <p><i class="fa-solid fa-location-dot text-slate-400 w-4 me-1"></i> ${p.district} District</p>
-              <p class="text-xs text-slate-500 line-clamp-2 mt-2 pt-2 border-t border-slate-100">${p.description}</p>
+            <div class="p-5">
+              <h4 class="text-lg font-bold text-slate-900">${p.name}</h4>
+              <div class="mt-2 space-y-1.5 text-sm text-slate-600">
+                <p><i class="fa-solid fa-cake-candles text-slate-400 w-4 me-1"></i> ${p.age} years old</p>
+                <p><i class="fa-solid fa-location-dot text-slate-400 w-4 me-1"></i> ${p.district} District</p>
+                <p class="text-xs text-slate-500 line-clamp-2 mt-2 pt-2 border-t border-slate-100">${p.description}</p>
+              </div>
             </div>
           </div>
-          <div class="mt-5 pt-3 flex items-center justify-between gap-2">
+          <div class="p-5 pt-0 flex items-center justify-between gap-2">
             <button onclick="viewDetails('${p.id}')" class="w-full bg-slate-900 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition">
               View Details
             </button>
@@ -330,8 +346,12 @@
       tbody.innerHTML = '';
 
       proposals.forEach(p => {
+        const photoSrc = p.photo || 'https://via.placeholder.com/50?text=N/A';
         const row = document.createElement('tr');
         row.innerHTML = `
+          <td class="p-3">
+            <img src="${photoSrc}" class="w-10 h-10 object-cover rounded-full border border-slate-200">
+          </td>
           <td class="p-3 font-mono text-xs text-slate-500">${p.id}</td>
           <td class="p-3 font-medium text-slate-900">${p.name}</td>
           <td class="p-3">${p.gender}</td>
@@ -376,7 +396,6 @@
       const u = document.getElementById('loginUser').value;
       const p = document.getElementById('loginPass').value;
 
-      // Admin verification against updated credentials
       if (u === 'ADMINNASEEM' && p === 'NASEEMPAK2000RISHTA@12345') {
         isAdminLoggedIn = true;
         document.getElementById('loginError').classList.add('hidden');
@@ -395,11 +414,28 @@
       }
     }
 
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('inputPhotoUrl').value = evt.target.result;
+          document.getElementById('photoPreview').src = evt.target.result;
+          document.getElementById('photoPreviewContainer').classList.remove('hidden');
+          document.getElementById('photoPreviewContainer').classList.add('flex');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function openProposalModal(editId = null) {
       if (!isAdminLoggedIn) return;
 
       const form = document.getElementById('proposalForm');
       form.reset();
+      document.getElementById('inputPhotoUrl').value = '';
+      document.getElementById('photoPreviewContainer').classList.add('hidden');
+      document.getElementById('photoPreviewContainer').classList.remove('flex');
       
       if (editId) {
         const item = proposals.find(p => p.id === editId);
@@ -412,6 +448,12 @@
           document.getElementById('inputDistrict').value = item.district;
           document.getElementById('inputDescription').value = item.description;
           document.getElementById('inputPhone').value = item.phone;
+          if (item.photo) {
+            document.getElementById('inputPhotoUrl').value = item.photo;
+            document.getElementById('photoPreview').src = item.photo;
+            document.getElementById('photoPreviewContainer').classList.remove('hidden');
+            document.getElementById('photoPreviewContainer').classList.add('flex');
+          }
         }
       } else {
         document.getElementById('formModalTitle').textContent = 'Add Rishta Proposal';
@@ -432,7 +474,8 @@
         age: parseInt(document.getElementById('inputAge').value),
         district: document.getElementById('inputDistrict').value,
         description: document.getElementById('inputDescription').value,
-        phone: document.getElementById('inputPhone').value
+        phone: document.getElementById('inputPhone').value,
+        photo: document.getElementById('inputPhotoUrl').value || 'https://via.placeholder.com/300x300?text=No+Photo'
       };
 
       if (editId) {
@@ -462,15 +505,21 @@
     function viewDetails(id) {
       const p = proposals.find(item => item.id === id);
       if (!p) return;
+      const photoSrc = p.photo || 'https://via.placeholder.com/300x300?text=No+Photo';
       const body = document.getElementById('contactModalBody');
       body.innerHTML = `
-        <div class="bg-slate-50 p-4 rounded-lg space-y-2 border border-slate-200">
-          <p><strong>ID:</strong> <span class="font-mono text-xs">${p.id}</span></p>
-          <p><strong>Name:</strong> ${p.name}</p>
-          <p><strong>Gender:</strong> ${p.gender}</p>
-          <p><strong>Age:</strong> ${p.age} years old</p>
-          <p><strong>District:</strong> ${p.district}</p>
-          <p><strong>Contact Phone:</strong> <span class="text-emerald-700 font-semibold">${p.phone}</span></p>
+        <div class="bg-slate-50 p-4 rounded-lg space-y-3 border border-slate-200">
+          <div class="w-full h-56 rounded-lg overflow-hidden border border-slate-300">
+            <img src="${photoSrc}" class="w-full h-full object-cover">
+          </div>
+          <div class="space-y-1 pt-1">
+            <p><strong>ID:</strong> <span class="font-mono text-xs">${p.id}</span></p>
+            <p><strong>Name:</strong> ${p.name}</p>
+            <p><strong>Gender:</strong> ${p.gender}</p>
+            <p><strong>Age:</strong> ${p.age} years old</p>
+            <p><strong>District:</strong> ${p.district}</p>
+            <p><strong>Contact Phone:</strong> <span class="text-emerald-700 font-semibold">${p.phone}</span></p>
+          </div>
           <div class="pt-2 border-t border-slate-200">
             <strong class="block mb-1">Description / Details:</strong>
             <p class="text-xs text-slate-600 leading-relaxed">${p.description}</p>
