@@ -8,21 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .province-path {
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-        }
-        .province-path:hover {
-            filter: brightness(1.15);
-            stroke-width: 2.5px;
-        }
-        .province-active {
-            stroke: #ffffff !important;
-            stroke-width: 3px !important;
-            filter: brightness(1.25);
-        }
-    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -54,7 +39,7 @@
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Content Container -->
     <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
 
         <!-- Top Gender Switcher Filter -->
@@ -73,11 +58,11 @@
             </div>
         </section>
 
-        <!-- Custom 2D Interactive Map of Pakistan -->
+        <!-- 2D Image Map of Pakistan Section -->
         <section class="bg-[#1f273d] p-4 sm:p-6 rounded-xl shadow-lg border border-slate-700 text-white">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-base font-bold flex items-center gap-2 text-slate-100">
-                    <i class="fa-solid fa-map-location-dot text-emerald-400"></i> Select Location on Map
+                    <i class="fa-solid fa-map-location-dot text-emerald-400"></i> Map of Pakistan
                 </h2>
                 <div class="flex items-center gap-2">
                     <span id="selected-location-badge" class="text-xs bg-emerald-900/80 text-emerald-200 font-semibold px-3 py-1 rounded-full border border-emerald-500">
@@ -89,89 +74,37 @@
                 </div>
             </div>
 
-            <!-- Vector Map Container -->
-            <div class="relative w-full max-w-3xl mx-auto overflow-hidden rounded-lg bg-[#181f30] border border-slate-800 p-2">
-                <svg viewBox="0 0 800 650" class="w-full h-auto select-none">
-                    <!-- Arabian Sea -->
-                    <rect x="0" y="520" width="380" height="130" fill="#17314d" />
-                    <text x="180" y="585" fill="#588ab8" font-size="16" font-weight="bold" font-family="sans-serif" letter-spacing="3" text-anchor="middle">ARABIAN SEA</text>
-
-                    <!-- Neighboring Countries Labels -->
-                    <text x="120" y="70" fill="#3d4e6d" font-size="13" font-weight="bold" font-family="sans-serif" letter-spacing="2">TURKMENISTAN</text>
-                    <text x="340" y="30" fill="#3d4e6d" font-size="13" font-weight="bold" font-family="sans-serif" letter-spacing="2">TAJIKISTAN</text>
-                    <text x="370" y="70" fill="#3d4e6d" font-size="13" font-weight="bold" font-family="sans-serif" letter-spacing="2">UZBEKISTAN</text>
-                    <text x="630" y="45" fill="#3d4e6d" font-size="18" font-weight="bold" font-family="sans-serif" letter-spacing="4">CHINA</text>
-                    <text x="140" y="270" fill="#3b4d6c" font-size="28" font-weight="extrabold" font-family="sans-serif" letter-spacing="5">AFGHANISTAN</text>
-                    <text x="40" y="420" fill="#3b4d6c" font-size="22" font-weight="extrabold" font-family="sans-serif" letter-spacing="4">IRAN</text>
-                    <text x="700" y="340" fill="#3b4d6c" font-size="30" font-weight="extrabold" font-family="sans-serif" letter-spacing="6">INDIA</text>
-
-                    <!-- PROVINCES -->
-                    <!-- 1. Balochistan (Red) -->
-                    <path id="prov-balochistan" class="province-path" onclick="filterByProvince('Balochistan')" fill="#ea5455" stroke="#181f30" stroke-width="1.5"
-                          d="M 40,350 L 120,380 L 190,390 L 250,390 L 320,440 L 420,430 L 400,455 L 440,455 L 370,550 L 290,530 L 230,555 L 180,545 L 110,540 L 50,545 L 30,380 Z" />
-
-                    <!-- 2. Sindh (Green) -->
-                    <path id="prov-sindh" class="province-path" onclick="filterByProvince('Sindh')" fill="#52b788" stroke="#181f30" stroke-width="1.5"
-                          d="M 370,550 L 440,455 L 430,425 L 485,505 L 480,580 L 430,620 L 370,610 L 350,570 Z" />
-
-                    <!-- 3. Punjab (Orange) -->
-                    <path id="prov-punjab" class="province-path" onclick="filterByProvince('Punjab')" fill="#f79d5c" stroke="#181f30" stroke-width="1.5"
-                          d="M 320,440 L 420,430 L 430,425 L 485,505 L 560,420 L 640,360 L 650,280 L 620,230 L 540,230 L 470,300 L 440,350 L 380,330 L 360,370 L 410,380 L 380,410 Z" />
-
-                    <!-- 4. KPK (Khyber Pakhtunkhwa - Muted Green) -->
-                    <path id="prov-kpk" class="province-path" onclick="filterByProvince('Khyber Pakhtunkhwa')" fill="#74c69d" stroke="#181f30" stroke-width="1.5"
-                          d="M 380,330 L 440,350 L 470,300 L 540,230 L 520,180 L 460,180 L 450,220 L 410,210 L 400,260 L 440,270 L 420,300 Z" />
-
-                    <!-- 5. Gilgit-Baltistan (Peach/Orange) -->
-                    <path id="prov-gb" class="province-path" onclick="filterByProvince('Gilgit-Baltistan')" fill="#faba62" stroke="#181f30" stroke-width="1.5"
-                          d="M 520,180 L 540,230 L 620,230 L 650,190 L 770,100 L 620,35 L 560,70 L 530,130 Z" />
-
-                    <!-- 6. AJK & Islamabad (Pink/Red highlight) -->
-                    <path id="prov-ajk" class="province-path" onclick="filterByProvince('Azad Jammu & Kashmir')" fill="#ff6b6b" stroke="#181f30" stroke-width="1.5"
-                          d="M 620,230 L 650,280 L 640,300 L 610,250 Z" />
-
-                    <!-- City Markers & Text -->
-                    <!-- Quetta -->
-                    <circle cx="330" cy="355" r="4" fill="#ffffff" />
-                    <text x="340" y="359" fill="#ffffff" font-size="12" font-weight="bold">Quetta</text>
-
-                    <!-- Karachi -->
-                    <circle cx="380" cy="590" r="4" fill="#ffffff" />
-                    <text x="390" y="594" fill="#ffffff" font-size="12" font-weight="bold">Karachi</text>
-
-                    <!-- Lahore -->
-                    <circle cx="620" cy="290" r="4" fill="#ffffff" />
-                    <text x="570" y="294" fill="#ffffff" font-size="12" font-weight="bold">Lahore</text>
-
-                    <!-- Peshawar -->
-                    <circle cx="480" cy="195" r="4" fill="#ffffff" />
-                    <text x="415" y="199" fill="#ffffff" font-size="12" font-weight="bold">Peshawar</text>
-
-                    <!-- Islamabad -->
-                    <polygon points="560,205 565,215 555,215" fill="#ffe066" />
-                    <text x="572" y="212" fill="#ffe066" font-size="12" font-weight="bold">Islamabad</text>
-
-                    <!-- Gilgit -->
-                    <circle cx="610" cy="90" r="4" fill="#ffffff" />
-                    <text x="620" y="94" fill="#ffffff" font-size="12" font-weight="bold">Gilgit</text>
-
-                    <!-- Province Name Overlays -->
-                    <text x="200" y="460" fill="#ffffff" font-size="18" font-weight="900" letter-spacing="2" opacity="0.9">BALOCHISTAN</text>
-                    <text x="400" y="530" fill="#ffffff" font-size="17" font-weight="900" letter-spacing="2" opacity="0.9">SINDH</text>
-                    <text x="500" y="370" fill="#ffffff" font-size="20" font-weight="900" letter-spacing="3" opacity="0.9">PUNJAB</text>
-                    <text x="440" y="250" fill="#ffffff" font-size="11" font-weight="800" letter-spacing="1" opacity="0.95">KPK</text>
-                    <text x="590" y="140" fill="#ffffff" font-size="12" font-weight="800" letter-spacing="1" opacity="0.95">GILGIT-BALTISTAN</text>
-                </svg>
+            <!-- Map Wrapper with Right Side Covered -->
+            <div class="relative w-full max-w-2xl mx-auto overflow-hidden rounded-xl border border-slate-700 bg-[#252f48] shadow-inner">
+                <div class="relative w-full aspect-[4/3] overflow-hidden">
+                    <img id="pak-map-img" 
+                         src="https://raw.githubusercontent.com/123456-png932/Rishta-portal/main/Screenshot%202026-09-17%20005724.png" 
+                         alt="Map of Pakistan" 
+                         class="w-full h-full object-cover object-left"
+                         onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/ thumb/f/f3/Pakistan_location_map.svg/1000px-Pakistan_location_map.svg.png';" />
+                    
+                    <!-- Mask box covering "MAP OF PAKISTAN" & legend on the right side -->
+                    <div class="absolute top-0 right-0 w-[38%] h-full bg-[#252f48] pointer-events-none flex flex-col justify-center items-center p-4 border-l border-slate-800">
+                        <div class="text-center space-y-3">
+                            <div class="w-12 h-12 rounded-full bg-emerald-900/50 border border-emerald-500 flex items-center justify-center mx-auto text-emerald-400 text-xl shadow">
+                                <i class="fa-solid fa-compass"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-200">Select Region</h3>
+                            <p class="text-[11px] text-slate-400 leading-snug">Click a region button below to filter proposals</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Province Quick Selection Buttons -->
-            <div class="flex flex-wrap justify-center gap-2 mt-4 text-xs font-semibold">
-                <button onclick="filterByProvince('Punjab')" class="px-3 py-1.5 rounded-lg bg-[#f79d5c] text-slate-900 hover:opacity-90 transition">Punjab</button>
-                <button onclick="filterByProvince('Sindh')" class="px-3 py-1.5 rounded-lg bg-[#52b788] text-slate-900 hover:opacity-90 transition">Sindh</button>
-                <button onclick="filterByProvince('Khyber Pakhtunkhwa')" class="px-3 py-1.5 rounded-lg bg-[#74c69d] text-slate-900 hover:opacity-90 transition">KPK</button>
-                <button onclick="filterByProvince('Balochistan')" class="px-3 py-1.5 rounded-lg bg-[#ea5455] text-white hover:opacity-90 transition">Balochistan</button>
-                <button onclick="filterByProvince('Islamabad Capital Territory')" class="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-900 hover:opacity-90 transition">Islamabad</button>
-                <button onclick="filterByProvince('Azad Jammu & Kashmir')" class="px-3 py-1.5 rounded-lg bg-[#ff6b6b] text-white hover:opacity-90 transition">AJK</button>
+            <!-- Province Selection Pill Buttons -->
+            <div class="flex flex-wrap justify-center gap-2 mt-5 text-xs font-semibold">
+                <button onclick="filterByProvince('Punjab')" class="px-3.5 py-1.5 rounded-lg bg-[#f79d5c] text-slate-900 hover:opacity-90 transition shadow-sm">Punjab</button>
+                <button onclick="filterByProvince('Sindh')" class="px-3.5 py-1.5 rounded-lg bg-[#52b788] text-slate-900 hover:opacity-90 transition shadow-sm">Sindh</button>
+                <button onclick="filterByProvince('Khyber Pakhtunkhwa')" class="px-3.5 py-1.5 rounded-lg bg-[#74c69d] text-slate-900 hover:opacity-90 transition shadow-sm">KPK</button>
+                <button onclick="filterByProvince('Balochistan')" class="px-3.5 py-1.5 rounded-lg bg-[#ea5455] text-white hover:opacity-90 transition shadow-sm">Balochistan</button>
+                <button onclick="filterByProvince('Islamabad Capital Territory')" class="px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-900 hover:opacity-90 transition shadow-sm">Islamabad</button>
+                <button onclick="filterByProvince('Azad Jammu & Kashmir')" class="px-3.5 py-1.5 rounded-lg bg-[#ff6b6b] text-white hover:opacity-90 transition shadow-sm">AJK</button>
+                <button onclick="filterByProvince('Gilgit-Baltistan')" class="px-3.5 py-1.5 rounded-lg bg-[#faba62] text-slate-900 hover:opacity-90 transition shadow-sm">Gilgit-Baltistan</button>
             </div>
         </section>
 
@@ -184,9 +117,9 @@
                 </h3>
             </div>
 
-            <!-- Proposals Grid Container -->
+            <!-- Proposals Grid -->
             <div id="proposals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Proposals dynamically rendered here -->
+                <!-- Proposal Cards rendered dynamically -->
             </div>
 
             <!-- Empty State -->
@@ -290,7 +223,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Description / Family Details (Optional)</label>
-                    <textarea id="proposal-description" rows="3" placeholder="Add family background, education summary, or requirements..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+                    <textarea id="proposal-description" rows="3" placeholder="Add family background, education summary, height, or specific requirements..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
                 </div>
 
                 <div>
@@ -310,25 +243,25 @@
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Application JavaScript Logic -->
     <script>
-        // Application State
+        // State Management
         let proposals = [];
         let activeGender = 'all';
         let activeProvince = 'all';
         let isAdminLoggedIn = false;
 
-        // Secret Admin Authentication
+        // Private Team Credentials
         const ADMIN_USER = "admin@rishta.pk";
         const ADMIN_PASS = "PAKNASEEMFATIMA2000";
 
-        // Initialize on Page Load
+        // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             loadProposalsFromStorage();
             renderProposals();
         });
 
-        // Local Storage Handling
+        // Local Storage Methods
         function loadProposalsFromStorage() {
             const savedData = localStorage.getItem('pak_rishta_proposals');
             if (savedData) {
@@ -346,7 +279,7 @@
             localStorage.setItem('pak_rishta_proposals', JSON.stringify(proposals));
         }
 
-        // Gender Switcher
+        // Gender Switcher Logic
         function setGenderFilter(gender) {
             activeGender = gender;
             
@@ -364,29 +297,11 @@
             renderProposals();
         }
 
-        // Map Province Filter
+        // Map & Province Filter Logic
         function filterByProvince(provinceName) {
             activeProvince = provinceName;
             document.getElementById('selected-location-badge').innerText = provinceName;
             document.getElementById('reset-map-btn').classList.remove('hidden');
-
-            // Highlight active province SVG path
-            document.querySelectorAll('.province-path').forEach(p => p.classList.remove('province-active'));
-            
-            const mapIdMap = {
-                'Balochistan': 'prov-balochistan',
-                'Sindh': 'prov-sindh',
-                'Punjab': 'prov-punjab',
-                'Khyber Pakhtunkhwa': 'prov-kpk',
-                'Gilgit-Baltistan': 'prov-gb',
-                'Azad Jammu & Kashmir': 'prov-ajk'
-            };
-
-            const pathId = mapIdMap[provinceName];
-            if (pathId && document.getElementById(pathId)) {
-                document.getElementById(pathId).classList.add('province-active');
-            }
-
             renderProposals();
         }
 
@@ -395,7 +310,6 @@
             activeProvince = 'all';
             document.getElementById('selected-location-badge').innerText = 'All Pakistan';
             document.getElementById('reset-map-btn').classList.add('hidden');
-            document.querySelectorAll('.province-path').forEach(p => p.classList.remove('province-active'));
             setGenderFilter('all');
         }
 
@@ -436,7 +350,7 @@
                             <span class="text-xs font-mono text-slate-400">#${p.refCode}</span>
                         </div>
 
-                        <div class="border-t border-b border-slate-100 py-3 my-2">
+                        <div class="border-t border-b border-slate-100 py-2.5 my-2">
                             <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
                                 <i class="fa-solid fa-location-dot text-emerald-600"></i>
                                 <span>${p.city}, ${p.province}</span>
@@ -461,7 +375,7 @@
             `).join('');
         }
 
-        // Admin Auth Functions
+        // Admin Auth Handlers
         function openLoginModal() {
             document.getElementById('login-modal').classList.remove('hidden');
             document.getElementById('login-modal').classList.add('flex');
@@ -507,7 +421,7 @@
             }
         }
 
-        // Proposal Addition Functions
+        // Admin Modal Add / Remove Functions
         function openAddProposalModal() {
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('add-modal').classList.add('flex');
