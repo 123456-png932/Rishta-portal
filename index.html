@@ -3,67 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pakistani Matrimonial Portal</title>
+  <title>Rishta Pakistan - Matrimonial Portal</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     #map { height: 420px; width: 100%; border-radius: 0.75rem; z-index: 10; }
-    .leaflet-popup-content-wrapper { border-radius: 0.5rem; font-family: inherit; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
-  <!-- Navigation Bar -->
   <header class="bg-emerald-700 text-white shadow-md sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <i class="fa-solid me-2 fa-heart-hands-holding text-2xl text-amber-300"></i>
+        <i class="fa-solid fa-heart-hands-holding text-2xl text-amber-300"></i>
         <h1 class="text-xl font-bold tracking-wide">Rishta Pakistan Portal</h1>
       </div>
-      <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
-        <a href="#map-section" class="hover:text-amber-300 transition">Browse Map</a>
-        <a href="#proposals-section" class="hover:text-amber-300 transition">Proposals</a>
-        <a href="#admin-section" class="hover:text-amber-300 transition">Team Admin</a>
-        <button onclick="openModal('addProposalModal')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg shadow-sm transition">
-          + Add Proposal
+      <nav class="flex items-center gap-4 text-sm font-medium">
+        <a href="#map-section" class="hover:text-amber-300 transition hidden md:inline">Map</a>
+        <a href="#proposals-section" class="hover:text-amber-300 transition hidden md:inline">Proposals</a>
+        <button id="adminNavBtn" onclick="toggleAdminAuth()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg shadow-sm transition">
+          Admin Login
         </button>
       </nav>
     </div>
   </header>
 
-  <!-- Hero & Interactive GeoJSON Map Section -->
-  <section id="map-section" class="max-w-7xl mx-auto px-4 py-8 w-full">
+  <section id="map-section" class="max-w-7xl mx-auto px-4 py-6 w-full">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-      <div class="mb-4">
-        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Region Selection Map
-        </h2>
-        <p class="text-slate-600 text-sm">Select a region below to filter proposals by district or location.</p>
+      <div class="mb-4 flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Region Selection Map
+          </h2>
+          <p class="text-slate-600 text-sm">Click a region on the map to filter proposals by district.</p>
+        </div>
+        <button onclick="resetMapFilter()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-md transition">
+          Reset Map Filter
+        </button>
       </div>
       
-      <!-- Leaflet Map Canvas -->
       <div id="map" class="shadow-inner border border-slate-200"></div>
       
-      <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
-        <span id="selected-region-label">Current Region: <strong class="text-emerald-700">All Regions (Default)</strong></span>
-        <button onclick="resetMapFilter()" class="text-emerald-600 hover:underline font-medium">Reset Map Filter</button>
+      <div class="mt-3 text-xs text-slate-500">
+        <span id="selected-region-label">Current Region Filter: <strong class="text-emerald-700">All Regions</strong></span>
       </div>
     </div>
   </section>
 
-  <!-- Filters & Proposal Listings -->
   <section id="proposals-section" class="max-w-7xl mx-auto px-4 py-4 w-full flex-grow">
-    
-    <!-- Filter Controls -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center justify-between">
       <div class="flex flex-wrap gap-3 items-center w-full md:w-auto">
         <div>
@@ -84,23 +75,28 @@
           </select>
         </div>
       </div>
-      <div class="text-sm font-medium text-slate-600">
-        Showing <span id="proposalCount" class="text-emerald-700 font-bold">0</span> Proposals
+
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-medium text-slate-600">
+          Showing <span id="proposalCount" class="text-emerald-700 font-bold">0</span> Proposals
+        </span>
+        <button id="addProposalBtn" onclick="openProposalModal()" class="hidden bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-sm px-4 py-2 rounded-lg transition">
+          + Add Rishta
+        </button>
       </div>
     </div>
 
-    <!-- Proposal Cards Grid -->
-    <div id="proposalGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Dynamic Proposal Cards Render Here -->
-    </div>
+    <div id="proposalGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </section>
 
-  <!-- Admin Portal Section -->
-  <section id="admin-section" class="max-w-7xl mx-auto px-4 py-8 w-full border-t border-slate-200 mt-8">
+  <section id="adminPortalSection" class="hidden max-w-7xl mx-auto px-4 py-6 w-full border-t border-slate-200 mt-6">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-      <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-user-shield text-emerald-600"></i> Team Admin Portal
-      </h3>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-emerald-600"></i> Admin Management Dashboard
+        </h3>
+        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">Admin Authenticated</span>
+      </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm border-collapse">
           <thead>
@@ -109,48 +105,64 @@
               <th class="p-3">Name</th>
               <th class="p-3">Gender</th>
               <th class="p-3">District</th>
-              <th class="p-3">Profession</th>
-              <th class="p-3">Status</th>
+              <th class="p-3">Description</th>
               <th class="p-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="adminTableBody" class="divide-y divide-slate-100">
-            <!-- Dynamic Admin Rows Render Here -->
-          </tbody>
+          <tbody id="adminTableBody" class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="bg-slate-900 text-slate-400 py-6 text-center text-sm mt-auto">
-    <p>&copy; 2026 Pakistani Matrimonial Portal. All rights reserved.</p>
+    <p>&copy; 2026 Rishta Pakistan Portal. All rights reserved.</p>
   </footer>
 
-  <!-- Modal: Contact Info -->
-  <div id="contactModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl relative">
+      <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-xl font-bold text-slate-900 mb-4 text-center">Admin Login</h3>
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Username</label>
+          <input type="text" id="loginUser" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-emerald-600">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+          <input type="password" id="loginPass" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-emerald-600">
+        </div>
+        <div id="loginError" class="text-rose-600 text-xs hidden font-medium text-center">Invalid credentials provided.</div>
+        <button type="submit" class="w-full bg-emerald-700 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="contactModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative">
       <button onclick="closeModal('contactModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
-      <h3 class="text-xl font-bold text-slate-900 mb-2">Proposal Details</h3>
-      <div id="contactModalBody" class="text-sm text-slate-600 space-y-3">
-        <!-- Content inserted dynamically -->
-      </div>
-      <button onclick="closeModal('contactModal')" class="mt-6 w-full bg-emerald-700 text-white py-2 rounded-lg font-medium hover:bg-emerald-800 transition">
+      <h3 class="text-xl font-bold text-slate-900 mb-3">Rishta Details</h3>
+      <div id="contactModalBody" class="text-sm text-slate-600 space-y-3"></div>
+      <button onclick="closeModal('contactModal')" class="mt-6 w-full bg-slate-900 text-white py-2 rounded-lg font-medium hover:bg-slate-800 transition">
         Close
       </button>
     </div>
   </div>
 
-  <!-- Modal: Add Proposal -->
-  <div id="addProposalModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative">
-      <button onclick="closeModal('addProposalModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+  <div id="proposalFormModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeModal('proposalFormModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
-      <h3 class="text-xl font-bold text-slate-900 mb-4">Add New Proposal</h3>
-      <form id="addProposalForm" onsubmit="handleAddProposal(event)" class="space-y-4">
+      <h3 id="formModalTitle" class="text-xl font-bold text-slate-900 mb-4">Add Rishta Proposal</h3>
+      <form id="proposalForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+        <input type="hidden" id="editProposalId">
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
@@ -179,23 +191,21 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Profession</label>
-          <input type="text" id="inputProfession" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Description / Details</label>
+          <textarea id="inputDescription" rows="3" required placeholder="Education, background, requirements..." class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600"></textarea>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Contact Phone</label>
           <input type="tel" id="inputPhone" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
         </div>
         <button type="submit" class="w-full bg-emerald-700 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition">
-          Submit Proposal
+          Save Rishta
         </button>
       </form>
     </div>
   </div>
 
-  <!-- JavaScript App Logic -->
   <script>
-    // GeoJSON Data provided by user
     const userGeoJSON = {
       "type": "FeatureCollection",
       "features": [
@@ -226,18 +236,16 @@
       ]
     };
 
-    // App State Data
     let proposals = [
-      { id: 'PAK-001', name: 'Ayesha Khan', gender: 'Bride', age: 25, district: 'Bagh', profession: 'Software Engineer', phone: '+92 300 1234567', status: 'Active' },
-      { id: 'PAK-002', name: 'Usman Ali', gender: 'Groom', age: 28, district: 'Bhimber', profession: 'Civil Engineer', phone: '+92 321 7654321', status: 'Active' },
-      { id: 'PAK-003', name: 'Fatima Ahmed', gender: 'Bride', age: 24, district: 'Kotli', profession: 'Doctor (MBBS)', phone: '+92 333 9876543', status: 'Active' },
-      { id: 'PAK-004', name: 'Bilal Malik', gender: 'Groom', age: 30, district: 'Bagh', profession: 'Accountant', phone: '+92 312 4567890', status: 'Active' }
+      { id: 'PAK-001', name: 'Ayesha Khan', gender: 'Bride', age: 25, district: 'Bagh', description: 'Software Engineer holding a Master degree from NUST. Belongs to an educated family background.', phone: '+92 300 1234567' },
+      { id: 'PAK-002', name: 'Usman Ali', gender: 'Groom', age: 28, district: 'Bhimber', description: 'Civil Engineer currently working on infrastructure projects. Seeking a well-educated match.', phone: '+92 321 7654321' },
+      { id: 'PAK-003', name: 'Fatima Ahmed', gender: 'Bride', age: 24, district: 'Kotli', description: 'Medical Doctor (MBBS) undergoing residency. Prefers a partner working in healthcare or IT.', phone: '+92 333 9876543' },
+      { id: 'PAK-004', name: 'Bilal Malik', gender: 'Groom', age: 30, district: 'Bagh', description: 'Chartered Accountant based in Islamabad. Family resides in Bagh.', phone: '+92 312 4567890' }
     ];
 
+    let isAdminLoggedIn = false;
     let map, geojsonLayer;
-    let selectedDistrict = 'All';
 
-    // Initialize Map
     function initMap() {
       map = L.map('map').setView([33.5, 73.9], 9);
 
@@ -246,18 +254,11 @@
       }).addTo(map);
 
       geojsonLayer = L.geoJSON(userGeoJSON, {
-        style: {
-          color: '#047857',
-          weight: 2,
-          fillColor: '#10b981',
-          fillOpacity: 0.35
-        },
+        style: { color: '#047857', weight: 2, fillColor: '#10b981', fillOpacity: 0.35 },
         onEachFeature: function (feature, layer) {
           const name = feature.properties.NAME_3 || 'Region';
           layer.bindTooltip(`<b>District:</b> ${name}`, { sticky: true });
-          layer.on('click', function () {
-            selectDistrictFromMap(name);
-          });
+          layer.on('click', function () { selectDistrictFromMap(name); });
         }
       }).addTo(map);
 
@@ -265,21 +266,18 @@
     }
 
     function selectDistrictFromMap(districtName) {
-      selectedDistrict = districtName;
       document.getElementById('filterDistrict').value = districtName;
-      document.getElementById('selected-region-label').innerHTML = `Current Region: <strong class="text-emerald-700">${districtName} District</strong>`;
+      document.getElementById('selected-region-label').innerHTML = `Current Region Filter: <strong class="text-emerald-700">${districtName} District</strong>`;
       applyFilters();
     }
 
     function resetMapFilter() {
-      selectedDistrict = 'All';
       document.getElementById('filterDistrict').value = 'All';
-      document.getElementById('selected-region-label').innerHTML = `Current Region: <strong class="text-emerald-700">All Regions (Default)</strong>`;
+      document.getElementById('selected-region-label').innerHTML = `Current Region Filter: <strong class="text-emerald-700">All Regions</strong>`;
       if (geojsonLayer) map.fitBounds(geojsonLayer.getBounds());
       applyFilters();
     }
 
-    // Render Proposal Cards
     function renderProposals(data) {
       const grid = document.getElementById('proposalGrid');
       const countLabel = document.getElementById('proposalCount');
@@ -287,7 +285,7 @@
       countLabel.textContent = data.length;
 
       if (data.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No matching proposals found for the selected filter.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No matching proposals found.</div>`;
         return;
       }
 
@@ -303,21 +301,30 @@
               <span class="text-xs text-slate-400 font-mono">${p.id}</span>
             </div>
             <h4 class="text-lg font-bold text-slate-900">${p.name}</h4>
-            <div class="mt-2 space-y-1 text-sm text-slate-600">
-              <p><i class="fa-solid me-2 fa-briefcase text-slate-400 w-4"></i> ${p.profession}</p>
-              <p><i class="fa-solid me-2 fa-cake-candles text-slate-400 w-4"></i> ${p.age} years old</p>
-              <p><i class="fa-solid me-2 fa-location-dot text-slate-400 w-4"></i> ${p.district} District</p>
+            <div class="mt-2 space-y-1.5 text-sm text-slate-600">
+              <p><i class="fa-solid fa-cake-candles text-slate-400 w-4 me-1"></i> ${p.age} years old</p>
+              <p><i class="fa-solid fa-location-dot text-slate-400 w-4 me-1"></i> ${p.district} District</p>
+              <p class="text-xs text-slate-500 line-clamp-2 mt-2 pt-2 border-t border-slate-100">${p.description}</p>
             </div>
           </div>
-          <button onclick="viewContact('${p.id}')" class="mt-5 w-full bg-slate-900 hover:bg-emerald-700 text-white text-sm font-medium py-2 rounded-lg transition">
-            View Details
-          </button>
+          <div class="mt-5 pt-3 flex items-center justify-between gap-2">
+            <button onclick="viewDetails('${p.id}')" class="w-full bg-slate-900 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition">
+              View Details
+            </button>
+            ${isAdminLoggedIn ? `
+              <button onclick="openProposalModal('${p.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 p-2 rounded-lg text-xs" title="Edit">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="deleteProposal('${p.id}')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 p-2 rounded-lg text-xs" title="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            ` : ''}
+          </div>
         `;
         grid.appendChild(card);
       });
     }
 
-    // Render Admin Table
     function renderAdminTable() {
       const tbody = document.getElementById('adminTableBody');
       tbody.innerHTML = '';
@@ -329,9 +336,9 @@
           <td class="p-3 font-medium text-slate-900">${p.name}</td>
           <td class="p-3">${p.gender}</td>
           <td class="p-3">${p.district}</td>
-          <td class="p-3">${p.profession}</td>
-          <td class="p-3"><span class="px-2 py-0.5 text-xs rounded bg-emerald-100 text-emerald-800">${p.status}</span></td>
-          <td class="p-3 text-right">
+          <td class="p-3 text-xs text-slate-500 max-w-xs truncate">${p.description}</td>
+          <td class="p-3 text-right space-x-2">
+            <button onclick="openProposalModal('${p.id}')" class="text-amber-600 hover:text-amber-800 text-xs font-semibold">Edit</button>
             <button onclick="deleteProposal('${p.id}')" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">Delete</button>
           </td>
         `;
@@ -339,7 +346,6 @@
       });
     }
 
-    // Filter Handlers
     function applyFilters() {
       const gender = document.getElementById('filterGender').value;
       const district = document.getElementById('filterDistrict').value;
@@ -353,59 +359,133 @@
       renderProposals(filtered);
     }
 
-    // Modal Control
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
-
-    function viewContact(id) {
-      const p = proposals.find(item => item.id === id);
-      if(!p) return;
-      const body = document.getElementById('contactModalBody');
-      body.innerHTML = `
-        <div class="bg-slate-50 p-4 rounded-lg space-y-2 border border-slate-100">
-          <p><strong>Name:</strong> ${p.name}</p>
-          <p><strong>Gender:</strong> ${p.gender}</p>
-          <p><strong>Age:</strong> ${p.age}</p>
-          <p><strong>District:</strong> ${p.district}</p>
-          <p><strong>Profession:</strong> ${p.profession}</p>
-          <p><strong>Contact Phone:</strong> <span class="text-emerald-700 font-semibold">${p.phone}</span></p>
-        </div>
-      `;
-      openModal('contactModal');
+    function toggleAdminAuth() {
+      if (isAdminLoggedIn) {
+        isAdminLoggedIn = false;
+        document.getElementById('adminNavBtn').textContent = 'Admin Login';
+        document.getElementById('adminPortalSection').classList.add('hidden');
+        document.getElementById('addProposalBtn').classList.add('hidden');
+        applyFilters();
+      } else {
+        openModal('loginModal');
+      }
     }
 
-    // Form Handler
-    function handleAddProposal(e) {
+    function handleLogin(e) {
       e.preventDefault();
-      const newP = {
-        id: 'PAK-00' + (proposals.length + 1),
+      const u = document.getElementById('loginUser').value;
+      const p = document.getElementById('loginPass').value;
+
+      // Admin verification against updated credentials
+      if (u === 'ADMINNASEEM' && p === 'NASEEMPAK2000RISHTA@12345') {
+        isAdminLoggedIn = true;
+        document.getElementById('loginError').classList.add('hidden');
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+        closeModal('loginModal');
+        
+        document.getElementById('adminNavBtn').textContent = 'Logout Admin';
+        document.getElementById('adminPortalSection').classList.remove('hidden');
+        document.getElementById('addProposalBtn').classList.remove('hidden');
+        
+        applyFilters();
+        renderAdminTable();
+      } else {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    function openProposalModal(editId = null) {
+      if (!isAdminLoggedIn) return;
+
+      const form = document.getElementById('proposalForm');
+      form.reset();
+      
+      if (editId) {
+        const item = proposals.find(p => p.id === editId);
+        if (item) {
+          document.getElementById('formModalTitle').textContent = 'Edit Rishta Proposal';
+          document.getElementById('editProposalId').value = item.id;
+          document.getElementById('inputName').value = item.name;
+          document.getElementById('inputGender').value = item.gender;
+          document.getElementById('inputAge').value = item.age;
+          document.getElementById('inputDistrict').value = item.district;
+          document.getElementById('inputDescription').value = item.description;
+          document.getElementById('inputPhone').value = item.phone;
+        }
+      } else {
+        document.getElementById('formModalTitle').textContent = 'Add Rishta Proposal';
+        document.getElementById('editProposalId').value = '';
+      }
+
+      openModal('proposalFormModal');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      if (!isAdminLoggedIn) return;
+
+      const editId = document.getElementById('editProposalId').value;
+      const data = {
         name: document.getElementById('inputName').value,
         gender: document.getElementById('inputGender').value,
         age: parseInt(document.getElementById('inputAge').value),
         district: document.getElementById('inputDistrict').value,
-        profession: document.getElementById('inputProfession').value,
-        phone: document.getElementById('inputPhone').value,
-        status: 'Active'
+        description: document.getElementById('inputDescription').value,
+        phone: document.getElementById('inputPhone').value
       };
 
-      proposals.push(newP);
-      document.getElementById('addProposalForm').reset();
-      closeModal('addProposalModal');
+      if (editId) {
+        const idx = proposals.findIndex(p => p.id === editId);
+        if (idx !== -1) {
+          proposals[idx] = { id: editId, ...data };
+        }
+      } else {
+        const newId = 'PAK-00' + (proposals.length + 1);
+        proposals.push({ id: newId, ...data });
+      }
+
+      closeModal('proposalFormModal');
       applyFilters();
       renderAdminTable();
     }
 
     function deleteProposal(id) {
-      proposals = proposals.filter(p => p.id !== id);
-      applyFilters();
-      renderAdminTable();
+      if (!isAdminLoggedIn) return;
+      if (confirm(`Are you sure you want to delete proposal ${id}?`)) {
+        proposals = proposals.filter(p => p.id !== id);
+        applyFilters();
+        renderAdminTable();
+      }
     }
 
-    // App Initialization
+    function viewDetails(id) {
+      const p = proposals.find(item => item.id === id);
+      if (!p) return;
+      const body = document.getElementById('contactModalBody');
+      body.innerHTML = `
+        <div class="bg-slate-50 p-4 rounded-lg space-y-2 border border-slate-200">
+          <p><strong>ID:</strong> <span class="font-mono text-xs">${p.id}</span></p>
+          <p><strong>Name:</strong> ${p.name}</p>
+          <p><strong>Gender:</strong> ${p.gender}</p>
+          <p><strong>Age:</strong> ${p.age} years old</p>
+          <p><strong>District:</strong> ${p.district}</p>
+          <p><strong>Contact Phone:</strong> <span class="text-emerald-700 font-semibold">${p.phone}</span></p>
+          <div class="pt-2 border-t border-slate-200">
+            <strong class="block mb-1">Description / Details:</strong>
+            <p class="text-xs text-slate-600 leading-relaxed">${p.description}</p>
+          </div>
+        </div>
+      `;
+      openModal('contactModal');
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
     window.onload = () => {
       initMap();
       applyFilters();
-      renderAdminTable();
     };
   </script>
 </body>
