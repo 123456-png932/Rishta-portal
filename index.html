@@ -215,6 +215,7 @@
     &copy; Rishta Pakistan Portal. All rights reserved.
   </footer>
 
+  <!-- Application Script -->
   <script>
     const userGeoJSON = {
       "type": "FeatureCollection",
@@ -246,6 +247,7 @@
       ]
     };
 
+    // Load saved proposals from localStorage or default to empty array
     let proposals = JSON.parse(localStorage.getItem('rishtaProposals')) || [];
 
     function saveProposals() {
