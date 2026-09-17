@@ -1,476 +1,412 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pakistani Matrimonial Portal</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pakistani Matrimonial Portal</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    #map { height: 420px; width: 100%; border-radius: 0.75rem; z-index: 10; }
+    .leaflet-popup-content-wrapper { border-radius: 0.5rem; font-family: inherit; }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Header / Navigation -->
-    <header class="bg-emerald-700 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
-                <div class="bg-white text-emerald-700 p-2 rounded-lg font-extrabold text-xl shadow">
-                    🇵🇰
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight">Pakistani Matrimonial Portal</h1>
-                </div>
-            </div>
-            
-            <div id="nav-actions">
-                <button onclick="openLoginModal()" id="admin-login-btn" class="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-emerald-600">
-                    <i class="fa-solid fa-lock text-xs"></i> Team Admin
-                </button>
-                <div id="logged-in-controls" class="hidden flex items-center gap-3">
-                    <button onclick="openAddProposalModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Add Proposal
-                    </button>
-                    <button onclick="logoutAdmin()" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs transition">
-                        Logout
-                    </button>
-                </div>
-            </div>
+  <!-- Navigation Bar -->
+  <header class="bg-emerald-700 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid me-2 fa-heart-hands-holding text-2xl text-amber-300"></i>
+        <h1 class="text-xl font-bold tracking-wide">Rishta Pakistan Portal</h1>
+      </div>
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
+        <a href="#map-section" class="hover:text-amber-300 transition">Browse Map</a>
+        <a href="#proposals-section" class="hover:text-amber-300 transition">Proposals</a>
+        <a href="#admin-section" class="hover:text-amber-300 transition">Team Admin</a>
+        <button onclick="openModal('addProposalModal')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-lg shadow-sm transition">
+          + Add Proposal
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero & Interactive GeoJSON Map Section -->
+  <section id="map-section" class="max-w-7xl mx-auto px-4 py-8 w-full">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div class="mb-4">
+        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Region Selection Map
+        </h2>
+        <p class="text-slate-600 text-sm">Select a region below to filter proposals by district or location.</p>
+      </div>
+      
+      <!-- Leaflet Map Canvas -->
+      <div id="map" class="shadow-inner border border-slate-200"></div>
+      
+      <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+        <span id="selected-region-label">Current Region: <strong class="text-emerald-700">All Regions (Default)</strong></span>
+        <button onclick="resetMapFilter()" class="text-emerald-600 hover:underline font-medium">Reset Map Filter</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters & Proposal Listings -->
+  <section id="proposals-section" class="max-w-7xl mx-auto px-4 py-4 w-full flex-grow">
+    
+    <!-- Filter Controls -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center justify-between">
+      <div class="flex flex-wrap gap-3 items-center w-full md:w-auto">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Gender</label>
+          <select id="filterGender" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-emerald-600">
+            <option value="All">All Genders</option>
+            <option value="Bride">Bride (Female)</option>
+            <option value="Groom">Groom (Male)</option>
+          </select>
         </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
-
-        <!-- Top Gender Switcher Filter -->
-        <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 text-center">Select Gender Filter</label>
-            <div class="flex justify-center gap-2 max-w-md mx-auto">
-                <button id="btn-gender-all" onclick="setGenderFilter('all')" class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition border bg-emerald-700 text-white border-emerald-700 shadow-sm">
-                    <i class="fa-solid fa-users mr-1.5"></i> All
-                </button>
-                <button id="btn-gender-female" onclick="setGenderFilter('Female')" class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition border bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200">
-                    <i class="fa-solid fa-person-dress mr-1.5 text-pink-600"></i> Bride (Dulhan)
-                </button>
-                <button id="btn-gender-male" onclick="setGenderFilter('Male')" class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition border bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200">
-                    <i class="fa-solid fa-person mr-1.5 text-blue-600"></i> Groom (Dulha)
-                </button>
-            </div>
-        </section>
-
-        <!-- 2D Image Map of Pakistan Section -->
-        <section class="bg-[#1f273d] p-4 sm:p-6 rounded-xl shadow-lg border border-slate-700 text-white">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-base font-bold flex items-center gap-2 text-slate-100">
-                    <i class="fa-solid fa-map-location-dot text-emerald-400"></i> Map of Pakistan
-                </h2>
-                <div class="flex items-center gap-2">
-                    <span id="selected-location-badge" class="text-xs bg-emerald-900/80 text-emerald-200 font-semibold px-3 py-1 rounded-full border border-emerald-500">
-                        All Pakistan
-                    </span>
-                    <button id="reset-map-btn" onclick="resetFilters()" class="text-xs text-slate-300 hover:text-white underline hidden">
-                        Clear Selection
-                    </button>
-                </div>
-            </div>
-
-            <!-- Map Wrapper with Right Side Covered -->
-            <div class="relative w-full max-w-2xl mx-auto overflow-hidden rounded-xl border border-slate-700 bg-[#252f48] shadow-inner">
-                <div class="relative w-full aspect-[4/3] overflow-hidden">
-                    <img id="pak-map-img" 
-                         src="https://raw.githubusercontent.com/123456-png932/Rishta-portal/main/Screenshot%202026-09-17%20005724.png" 
-                         alt="Map of Pakistan" 
-                         class="w-full h-full object-cover object-left"
-                         onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/ thumb/f/f3/Pakistan_location_map.svg/1000px-Pakistan_location_map.svg.png';" />
-                    
-                    <!-- Mask box covering "MAP OF PAKISTAN" & legend on the right side -->
-                    <div class="absolute top-0 right-0 w-[38%] h-full bg-[#252f48] pointer-events-none flex flex-col justify-center items-center p-4 border-l border-slate-800">
-                        <div class="text-center space-y-3">
-                            <div class="w-12 h-12 rounded-full bg-emerald-900/50 border border-emerald-500 flex items-center justify-center mx-auto text-emerald-400 text-xl shadow">
-                                <i class="fa-solid fa-compass"></i>
-                            </div>
-                            <h3 class="text-sm font-bold text-slate-200">Select Region</h3>
-                            <p class="text-[11px] text-slate-400 leading-snug">Click a region button below to filter proposals</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Province Selection Pill Buttons -->
-            <div class="flex flex-wrap justify-center gap-2 mt-5 text-xs font-semibold">
-                <button onclick="filterByProvince('Punjab')" class="px-3.5 py-1.5 rounded-lg bg-[#f79d5c] text-slate-900 hover:opacity-90 transition shadow-sm">Punjab</button>
-                <button onclick="filterByProvince('Sindh')" class="px-3.5 py-1.5 rounded-lg bg-[#52b788] text-slate-900 hover:opacity-90 transition shadow-sm">Sindh</button>
-                <button onclick="filterByProvince('Khyber Pakhtunkhwa')" class="px-3.5 py-1.5 rounded-lg bg-[#74c69d] text-slate-900 hover:opacity-90 transition shadow-sm">KPK</button>
-                <button onclick="filterByProvince('Balochistan')" class="px-3.5 py-1.5 rounded-lg bg-[#ea5455] text-white hover:opacity-90 transition shadow-sm">Balochistan</button>
-                <button onclick="filterByProvince('Islamabad Capital Territory')" class="px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-900 hover:opacity-90 transition shadow-sm">Islamabad</button>
-                <button onclick="filterByProvince('Azad Jammu & Kashmir')" class="px-3.5 py-1.5 rounded-lg bg-[#ff6b6b] text-white hover:opacity-90 transition shadow-sm">AJK</button>
-                <button onclick="filterByProvince('Gilgit-Baltistan')" class="px-3.5 py-1.5 rounded-lg bg-[#faba62] text-slate-900 hover:opacity-90 transition shadow-sm">Gilgit-Baltistan</button>
-            </div>
-        </section>
-
-        <!-- Proposals Listing Section -->
-        <section>
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span>Available Proposals</span>
-                    <span id="count-badge" class="bg-slate-200 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">0</span>
-                </h3>
-            </div>
-
-            <!-- Proposals Grid -->
-            <div id="proposals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Proposal Cards rendered dynamically -->
-            </div>
-
-            <!-- Empty State -->
-            <div id="empty-state" class="hidden bg-white p-12 rounded-xl text-center border border-slate-200 shadow-sm my-6">
-                <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
-                    <i class="fa-solid fa-folder-open"></i>
-                </div>
-                <h4 class="text-slate-700 font-bold text-lg mb-1">No Proposals Found</h4>
-                <p class="text-slate-500 text-sm max-w-sm mx-auto">There are currently no proposals matching the selected filters for Pakistan.</p>
-                <button onclick="resetFilters()" class="mt-4 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-lg transition">
-                    Reset All Filters
-                </button>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-800 text-slate-400 text-xs py-6 border-t border-slate-700 mt-12">
-        <div class="max-w-6xl mx-auto px-4 text-center space-y-1">
-            <p class="font-semibold text-slate-300">Pakistani Matrimonial Portal</p>
-            <p>Verified Matrimonial Proposals across Pakistan</p>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">District</label>
+          <select id="filterDistrict" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-emerald-600">
+            <option value="All">All Districts</option>
+            <option value="Bagh">Bagh</option>
+            <option value="Bhimber">Bhimber</option>
+            <option value="Kotli">Kotli</option>
+          </select>
         </div>
-    </footer>
-
-    <!-- Team Admin Login Modal -->
-    <div id="login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 border border-slate-100">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-emerald-600"></i> Team Login
-                </h3>
-                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <form id="admin-login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Username / Email</label>
-                    <input type="text" id="login-username" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Enter team username">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-                    <input type="password" id="login-password" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Enter password">
-                </div>
-                <div id="login-error" class="text-red-500 text-xs font-medium hidden">
-                    Invalid credentials. Access restricted to management team.
-                </div>
-                <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg text-sm shadow transition">
-                    Log In to Dashboard
-                </button>
-            </form>
-        </div>
+      </div>
+      <div class="text-sm font-medium text-slate-600">
+        Showing <span id="proposalCount" class="text-emerald-700 font-bold">0</span> Proposals
+      </div>
     </div>
 
-    <!-- Add Proposal Modal (Admin Only) -->
-    <div id="add-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6 border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 border-b pb-3">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-plus-circle text-amber-500"></i> Add New Proposal
-                </h3>
-                <button onclick="closeAddProposalModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <form id="add-proposal-form" onsubmit="handleAddProposal(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Gender *</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="border rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50 transition border-slate-300">
-                            <input type="radio" name="proposal-gender" value="Female" required class="text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-sm font-medium text-slate-700">Bride (Dulhan)</span>
-                        </label>
-                        <label class="border rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50 transition border-slate-300">
-                            <input type="radio" name="proposal-gender" value="Male" required class="text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-sm font-medium text-slate-700">Groom (Dulha)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Province / Region *</label>
-                    <select id="proposal-province" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        <option value="Punjab">Punjab</option>
-                        <option value="Sindh">Sindh</option>
-                        <option value="Khyber Pakhtunkhwa">Khyber Pakhtunkhwa (KPK)</option>
-                        <option value="Balochistan">Balochistan</option>
-                        <option value="Islamabad Capital Territory">Islamabad Capital Territory</option>
-                        <option value="Azad Jammu & Kashmir">Azad Jammu & Kashmir (AJK)</option>
-                        <option value="Gilgit-Baltistan">Gilgit-Baltistan</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">City / District *</label>
-                    <input type="text" id="proposal-city" required placeholder="e.g. Lahore, Karachi, Rawalpindi, Swat" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Description / Family Details (Optional)</label>
-                    <textarea id="proposal-description" rows="3" placeholder="Add family background, education summary, height, or specific requirements..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Contact Number *</label>
-                    <input type="text" id="proposal-contact" required placeholder="e.g. +92 300 1234567" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </div>
-
-                <div class="pt-3 border-t flex justify-end gap-2">
-                    <button type="button" onclick="closeAddProposalModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-bold shadow transition">
-                        Publish Proposal
-                    </button>
-                </div>
-            </form>
-        </div>
+    <!-- Proposal Cards Grid -->
+    <div id="proposalGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Dynamic Proposal Cards Render Here -->
     </div>
+  </section>
 
-    <!-- Application JavaScript Logic -->
-    <script>
-        // State Management
-        let proposals = [];
-        let activeGender = 'all';
-        let activeProvince = 'all';
-        let isAdminLoggedIn = false;
+  <!-- Admin Portal Section -->
+  <section id="admin-section" class="max-w-7xl mx-auto px-4 py-8 w-full border-t border-slate-200 mt-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-user-shield text-emerald-600"></i> Team Admin Portal
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-200 text-slate-600">
+              <th class="p-3">ID</th>
+              <th class="p-3">Name</th>
+              <th class="p-3">Gender</th>
+              <th class="p-3">District</th>
+              <th class="p-3">Profession</th>
+              <th class="p-3">Status</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody" class="divide-y divide-slate-100">
+            <!-- Dynamic Admin Rows Render Here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-        // Private Team Credentials
-        const ADMIN_USER = "admin@rishta.pk";
-        const ADMIN_PASS = "PAKNASEEMFATIMA2000";
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 py-6 text-center text-sm mt-auto">
+    <p>&copy; 2026 Pakistani Matrimonial Portal. All rights reserved.</p>
+  </footer>
 
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', () => {
-            loadProposalsFromStorage();
-            renderProposals();
-        });
+  <!-- Modal: Contact Info -->
+  <div id="contactModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative">
+      <button onclick="closeModal('contactModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-xl font-bold text-slate-900 mb-2">Proposal Details</h3>
+      <div id="contactModalBody" class="text-sm text-slate-600 space-y-3">
+        <!-- Content inserted dynamically -->
+      </div>
+      <button onclick="closeModal('contactModal')" class="mt-6 w-full bg-emerald-700 text-white py-2 rounded-lg font-medium hover:bg-emerald-800 transition">
+        Close
+      </button>
+    </div>
+  </div>
 
-        // Local Storage Methods
-        function loadProposalsFromStorage() {
-            const savedData = localStorage.getItem('pak_rishta_proposals');
-            if (savedData) {
-                try {
-                    proposals = JSON.parse(savedData);
-                } catch(e) {
-                    proposals = [];
-                }
-            } else {
-                proposals = [];
-            }
+  <!-- Modal: Add Proposal -->
+  <div id="addProposalModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative">
+      <button onclick="closeModal('addProposalModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-xl font-bold text-slate-900 mb-4">Add New Proposal</h3>
+      <form id="addProposalForm" onsubmit="handleAddProposal(event)" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
+            <input type="text" id="inputName" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Gender</label>
+            <select id="inputGender" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
+              <option value="Bride">Bride</option>
+              <option value="Groom">Groom</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Age</label>
+            <input type="number" id="inputAge" min="18" max="70" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">District</label>
+            <select id="inputDistrict" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
+              <option value="Bagh">Bagh</option>
+              <option value="Bhimber">Bhimber</option>
+              <option value="Kotli">Kotli</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Profession</label>
+          <input type="text" id="inputProfession" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Contact Phone</label>
+          <input type="tel" id="inputPhone" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-emerald-600">
+        </div>
+        <button type="submit" class="w-full bg-emerald-700 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition">
+          Submit Proposal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript App Logic -->
+  <script>
+    // GeoJSON Data provided by user
+    const userGeoJSON = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": { "GID_0": "PAK", "NAME_0": "Pakistan", "NAME_1": "Azad Kashmir", "NAME_3": "Bagh", "TYPE_3": "District" },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[73.5409545898437,33.90389633178711],[73.49691009521484,33.97720718383795],[73.49163055419928,33.98332214355469],[73.50196075439459,34.024394989013786],[73.51313781738281,34.04160308837896],[73.49790954589844,34.1002769470216],[73.49443054199219,34.12512207031256],[73.59455871582031,34.10368728637701],[73.60157775878918,34.10174179077154],[73.67266082763678,34.121051788330135],[73.72682952880865,34.11981201171881],[73.80748748779303,34.06693267822271],[73.82436370849621,34.057331085205135],[73.8898086547851,34.0424041748048],[73.89817047119152,34.032821655273494],[74.00000000000011,34.03018951416027],[74.00607299804693,34.02244186401373],[74.11498260498053,34.05378341674799],[74.12369537353516,34.055179595947266],[74.19635009765625,34.040084838867244],[74.21467590332031,34.03855514526367],[74.24652862548828,34.01602935791021],[74.24868774414068,34.013820648193416],[74.2632522583009,33.95523071289074],[74.26358032226568,33.942619323730526],[74.21967315673834,33.86717605590826],[74.20762634277344,33.85940170288097],[74.04904937744152,33.80883026123047],[74.0413436889649,33.79899215698242],[74.01819610595703,33.819572448730526],[74.00099945068354,33.83676147460943],[73.97617340087902,33.89598083496094],[73.97043609619152,33.90553283691406],[73.93796539306646,33.894069671630916],[73.92076873779297,33.87688064575201],[73.76412963867188,33.87688064575201],[73.73547363281261,33.88069915771479],[73.63232421875,33.976211547851676],[73.60939788818371,33.9857635498048],[73.58647155761724,33.976211547851676],[73.5409545898437,33.90389633178711]]]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": { "GID_0": "PAK", "NAME_0": "Pakistan", "NAME_1": "Azad Kashmir", "NAME_3": "Bhimber", "TYPE_3": "District" },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[74.39077758789068,32.8017578125],[74.35362243652355,32.78948593139654],[74.31153869628906,32.78596496582037],[74.2615737915039,32.836631774902344],[74.2533950805664,32.8462753295899],[74.20242309570307,32.85983276367199],[74.18348693847668,32.865695953369084],[74.15357971191418,32.893310546875],[74.14402770996105,32.900188446045036],[73.99063873291021,32.94620132446289],[73.96382141113281,32.9433708190918],[73.93629455566418,32.9895133972168],[73.92600250244152,33.001506805419865],[73.90855407714844,32.99806594848627],[73.89191436767578,32.9955406188966],[73.8303451538086,33.01784896850597],[73.8234634399414,33.017486572265625],[73.82907867431646,33.04973220825207],[73.83098602294928,33.076473236083984],[73.87110137939464,33.15288543701172],[73.88447570800781,33.166259765625],[73.87492370605463,33.225296020507926],[73.87492370605463,33.244579315185604],[73.98954010009777,33.25413131713873],[74.0139770507812,33.25094223022472],[74.01427459716803,33.198249816894474],[74.01822662353516,33.19319152832037],[74.08283996582031,33.18074035644531],[74.09986877441406,33.172508239746094],[74.15702819824213,33.12586212158209],[74.17624664306652,33.107151031494254],[74.19064331054688,33.07670974731445],[74.19927215576178,33.04687881469738],[74.24203491210949,33.047294616699276],[74.2549667358399,33.04877471923828],[74.33792114257818,33.02593994140631],[74.34983062744152,33.016250610351676],[74.35317993164068,32.983131408691406],[74.34635925292974,32.9655494689942],[74.3161392211914,32.930160522460994],[74.31803131103516,32.91970062255865],[74.40605163574224,32.90697479248058],[74.41389465332043,32.903949737548885],[74.46605682373047,32.78136062622082],[74.47195434570312,32.77836227416992],[74.39077758789068,32.8017578125]]]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": { "GID_0": "PAK", "NAME_0": "Pakistan", "NAME_1": "Azad Kashmir", "NAME_3": "Kotli", "TYPE_3": "District" },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[74.0139770507812,33.25094223022472],[73.87492370605463,33.244579315185604],[73.87492370605463,33.225296020507926],[73.83863067626964,33.244579315185604],[73.80997467041021,33.26941299438482],[73.72210693359386,33.366836547851676],[73.69535827636724,33.393581390380916],[73.6017532348634,33.44515609741205],[73.56296539306646,33.44404983520508],[73.582992553711,33.46397399902344],[73.5893936157226,33.482902526855526],[73.5815811157226,33.499965667724666],[73.5752639770509,33.50841903686535],[73.59001922607422,33.53139114379883],[73.5966033935548,33.54405212402338],[73.56909942626959,33.61270141601574],[73.55679321289062,33.62844085693365],[73.58616638183594,33.64477920532232],[73.59243011474621,33.653430938720646],[73.62586975097656,33.653564453125],[73.63462829589844,33.65024185180664],[73.64493560791016,33.62997436523443],[73.651031,33.25094223022472]]]
+          }
         }
+      ]
+    };
 
-        function saveProposalsToStorage() {
-            localStorage.setItem('pak_rishta_proposals', JSON.stringify(proposals));
+    // App State Data
+    let proposals = [
+      { id: 'PAK-001', name: 'Ayesha Khan', gender: 'Bride', age: 25, district: 'Bagh', profession: 'Software Engineer', phone: '+92 300 1234567', status: 'Active' },
+      { id: 'PAK-002', name: 'Usman Ali', gender: 'Groom', age: 28, district: 'Bhimber', profession: 'Civil Engineer', phone: '+92 321 7654321', status: 'Active' },
+      { id: 'PAK-003', name: 'Fatima Ahmed', gender: 'Bride', age: 24, district: 'Kotli', profession: 'Doctor (MBBS)', phone: '+92 333 9876543', status: 'Active' },
+      { id: 'PAK-004', name: 'Bilal Malik', gender: 'Groom', age: 30, district: 'Bagh', profession: 'Accountant', phone: '+92 312 4567890', status: 'Active' }
+    ];
+
+    let map, geojsonLayer;
+    let selectedDistrict = 'All';
+
+    // Initialize Map
+    function initMap() {
+      map = L.map('map').setView([33.5, 73.9], 9);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      geojsonLayer = L.geoJSON(userGeoJSON, {
+        style: {
+          color: '#047857',
+          weight: 2,
+          fillColor: '#10b981',
+          fillOpacity: 0.35
+        },
+        onEachFeature: function (feature, layer) {
+          const name = feature.properties.NAME_3 || 'Region';
+          layer.bindTooltip(`<b>District:</b> ${name}`, { sticky: true });
+          layer.on('click', function () {
+            selectDistrictFromMap(name);
+          });
         }
+      }).addTo(map);
 
-        // Gender Switcher Logic
-        function setGenderFilter(gender) {
-            activeGender = gender;
-            
-            const btnAll = document.getElementById('btn-gender-all');
-            const btnFemale = document.getElementById('btn-gender-female');
-            const btnMale = document.getElementById('btn-gender-male');
+      map.fitBounds(geojsonLayer.getBounds());
+    }
 
-            const activeClass = 'bg-emerald-700 text-white border-emerald-700 shadow-sm';
-            const inactiveClass = 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200';
+    function selectDistrictFromMap(districtName) {
+      selectedDistrict = districtName;
+      document.getElementById('filterDistrict').value = districtName;
+      document.getElementById('selected-region-label').innerHTML = `Current Region: <strong class="text-emerald-700">${districtName} District</strong>`;
+      applyFilters();
+    }
 
-            btnAll.className = `flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition border ${gender === 'all' ? activeClass : inactiveClass}`;
-            btnFemale.className = `flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition border ${gender === 'Female' ? activeClass : inactiveClass}`;
-            btnMale.className = `flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition border ${gender === 'Male' ? activeClass : inactiveClass}`;
+    function resetMapFilter() {
+      selectedDistrict = 'All';
+      document.getElementById('filterDistrict').value = 'All';
+      document.getElementById('selected-region-label').innerHTML = `Current Region: <strong class="text-emerald-700">All Regions (Default)</strong>`;
+      if (geojsonLayer) map.fitBounds(geojsonLayer.getBounds());
+      applyFilters();
+    }
 
-            renderProposals();
-        }
+    // Render Proposal Cards
+    function renderProposals(data) {
+      const grid = document.getElementById('proposalGrid');
+      const countLabel = document.getElementById('proposalCount');
+      grid.innerHTML = '';
+      countLabel.textContent = data.length;
 
-        // Map & Province Filter Logic
-        function filterByProvince(provinceName) {
-            activeProvince = provinceName;
-            document.getElementById('selected-location-badge').innerText = provinceName;
-            document.getElementById('reset-map-btn').classList.remove('hidden');
-            renderProposals();
-        }
+      if (data.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No matching proposals found for the selected filter.</div>`;
+        return;
+      }
 
-        function resetFilters() {
-            activeGender = 'all';
-            activeProvince = 'all';
-            document.getElementById('selected-location-badge').innerText = 'All Pakistan';
-            document.getElementById('reset-map-btn').classList.add('hidden');
-            setGenderFilter('all');
-        }
+      data.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between hover:shadow-md transition';
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${p.gender === 'Bride' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">
+                ${p.gender}
+              </span>
+              <span class="text-xs text-slate-400 font-mono">${p.id}</span>
+            </div>
+            <h4 class="text-lg font-bold text-slate-900">${p.name}</h4>
+            <div class="mt-2 space-y-1 text-sm text-slate-600">
+              <p><i class="fa-solid me-2 fa-briefcase text-slate-400 w-4"></i> ${p.profession}</p>
+              <p><i class="fa-solid me-2 fa-cake-candles text-slate-400 w-4"></i> ${p.age} years old</p>
+              <p><i class="fa-solid me-2 fa-location-dot text-slate-400 w-4"></i> ${p.district} District</p>
+            </div>
+          </div>
+          <button onclick="viewContact('${p.id}')" class="mt-5 w-full bg-slate-900 hover:bg-emerald-700 text-white text-sm font-medium py-2 rounded-lg transition">
+            View Details
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    }
 
-        // Render Cards Grid
-        function renderProposals() {
-            const grid = document.getElementById('proposals-grid');
-            const emptyState = document.getElementById('empty-state');
-            const countBadge = document.getElementById('count-badge');
+    // Render Admin Table
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = '';
 
-            const filtered = proposals.filter(p => {
-                const matchGender = activeGender === 'all' || p.gender.toLowerCase() === activeGender.toLowerCase();
-                const matchProvince = activeProvince === 'all' || p.province.toLowerCase() === activeProvince.toLowerCase();
-                return matchGender && matchProvince;
-            });
+      proposals.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="p-3 font-mono text-xs text-slate-500">${p.id}</td>
+          <td class="p-3 font-medium text-slate-900">${p.name}</td>
+          <td class="p-3">${p.gender}</td>
+          <td class="p-3">${p.district}</td>
+          <td class="p-3">${p.profession}</td>
+          <td class="p-3"><span class="px-2 py-0.5 text-xs rounded bg-emerald-100 text-emerald-800">${p.status}</span></td>
+          <td class="p-3 text-right">
+            <button onclick="deleteProposal('${p.id}')" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
 
-            countBadge.innerText = filtered.length;
+    // Filter Handlers
+    function applyFilters() {
+      const gender = document.getElementById('filterGender').value;
+      const district = document.getElementById('filterDistrict').value;
 
-            if (filtered.length === 0) {
-                grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                return;
-            }
+      let filtered = proposals.filter(p => {
+        const matchGender = (gender === 'All' || p.gender === gender);
+        const matchDistrict = (district === 'All' || p.district === district);
+        return matchGender && matchDistrict;
+      });
 
-            emptyState.classList.add('hidden');
-            grid.innerHTML = filtered.map(p => `
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition flex flex-col justify-between relative">
-                    ${isAdminLoggedIn ? `
-                        <button onclick="deleteProposal('${p.id}')" class="absolute top-3 right-3 text-red-500 hover:text-red-700 text-xs bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition" title="Delete Proposal">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    ` : ''}
+      renderProposals(filtered);
+    }
 
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${p.gender === 'Female' ? 'bg-pink-100 text-pink-700 border border-pink-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">
-                                ${p.gender === 'Female' ? '♀ Bride (Dulhan)' : '♂ Groom (Dulha)'}
-                            </span>
-                            <span class="text-xs font-mono text-slate-400">#${p.refCode}</span>
-                        </div>
+    // Modal Control
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
 
-                        <div class="border-t border-b border-slate-100 py-2.5 my-2">
-                            <div class="flex items-center gap-2 text-slate-700 font-semibold text-sm">
-                                <i class="fa-solid fa-location-dot text-emerald-600"></i>
-                                <span>${p.city}, ${p.province}</span>
-                            </div>
-                        </div>
+    function viewContact(id) {
+      const p = proposals.find(item => item.id === id);
+      if(!p) return;
+      const body = document.getElementById('contactModalBody');
+      body.innerHTML = `
+        <div class="bg-slate-50 p-4 rounded-lg space-y-2 border border-slate-100">
+          <p><strong>Name:</strong> ${p.name}</p>
+          <p><strong>Gender:</strong> ${p.gender}</p>
+          <p><strong>Age:</strong> ${p.age}</p>
+          <p><strong>District:</strong> ${p.district}</p>
+          <p><strong>Profession:</strong> ${p.profession}</p>
+          <p><strong>Contact Phone:</strong> <span class="text-emerald-700 font-semibold">${p.phone}</span></p>
+        </div>
+      `;
+      openModal('contactModal');
+    }
 
-                        ${p.description ? `
-                            <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed">
-                                ${p.description}
-                            </p>
-                        ` : ''}
-                    </div>
+    // Form Handler
+    function handleAddProposal(e) {
+      e.preventDefault();
+      const newP = {
+        id: 'PAK-00' + (proposals.length + 1),
+        name: document.getElementById('inputName').value,
+        gender: document.getElementById('inputGender').value,
+        age: parseInt(document.getElementById('inputAge').value),
+        district: document.getElementById('inputDistrict').value,
+        profession: document.getElementById('inputProfession').value,
+        phone: document.getElementById('inputPhone').value,
+        status: 'Active'
+      };
 
-                    <div class="mt-4 pt-2">
-                        <a href="https://wa.me/${p.contact.replace(/[^0-9]/g, '')}?text=Hello,%20I%20am%20inquiring%20about%20Rishta%20Ref%20%23${p.refCode}%20(${p.gender},%20${p.city})" 
-                           target="_blank" 
-                           class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm text-center flex items-center justify-center gap-2 shadow-sm transition">
-                            <i class="fa-brands fa-whatsapp text-base"></i> Contact Team
-                        </a>
-                    </div>
-                </div>
-            `).join('');
-        }
+      proposals.push(newP);
+      document.getElementById('addProposalForm').reset();
+      closeModal('addProposalModal');
+      applyFilters();
+      renderAdminTable();
+    }
 
-        // Admin Auth Handlers
-        function openLoginModal() {
-            document.getElementById('login-modal').classList.remove('hidden');
-            document.getElementById('login-modal').classList.add('flex');
-        }
+    function deleteProposal(id) {
+      proposals = proposals.filter(p => p.id !== id);
+      applyFilters();
+      renderAdminTable();
+    }
 
-        function closeLoginModal() {
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('login-modal').classList.remove('flex');
-            document.getElementById('login-error').classList.add('hidden');
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const user = document.getElementById('login-username').value.trim();
-            const pass = document.getElementById('login-password').value.trim();
-
-            if (user === ADMIN_USER && pass === ADMIN_PASS) {
-                isAdminLoggedIn = true;
-                closeLoginModal();
-                updateAdminUI();
-                renderProposals();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        function logoutAdmin() {
-            isAdminLoggedIn = false;
-            updateAdminUI();
-            renderProposals();
-        }
-
-        function updateAdminUI() {
-            const loginBtn = document.getElementById('admin-login-btn');
-            const adminControls = document.getElementById('logged-in-controls');
-
-            if (isAdminLoggedIn) {
-                loginBtn.classList.add('hidden');
-                adminControls.classList.remove('hidden');
-            } else {
-                loginBtn.classList.remove('hidden');
-                adminControls.classList.add('hidden');
-            }
-        }
-
-        // Admin Modal Add / Remove Functions
-        function openAddProposalModal() {
-            document.getElementById('add-modal').classList.remove('hidden');
-            document.getElementById('add-modal').classList.add('flex');
-        }
-
-        function closeAddProposalModal() {
-            document.getElementById('add-modal').classList.add('hidden');
-            document.getElementById('add-modal').classList.remove('flex');
-            document.getElementById('add-proposal-form').reset();
-        }
-
-        function handleAddProposal(e) {
-            e.preventDefault();
-            
-            const genderEl = document.querySelector('input[name="proposal-gender"]:checked');
-            const provinceEl = document.getElementById('proposal-province');
-            const cityEl = document.getElementById('proposal-city');
-            const descEl = document.getElementById('proposal-description');
-            const contactEl = document.getElementById('proposal-contact');
-
-            if (!genderEl || !provinceEl.value || !cityEl.value || !contactEl.value) {
-                alert("Please complete all required fields.");
-                return;
-            }
-
-            const newProposal = {
-                id: 'prop_' + Date.now(),
-                refCode: 'PK-' + Math.floor(1000 + Math.random() * 9000),
-                gender: genderEl.value,
-                province: provinceEl.value,
-                city: cityEl.value.trim(),
-                description: descEl.value.trim(),
-                contact: contactEl.value.trim(),
-                createdAt: new Date().toISOString()
-            };
-
-            proposals.unshift(newProposal);
-            saveProposalsToStorage();
-            renderProposals();
-            closeAddProposalModal();
-        }
-
-        function deleteProposal(id) {
-            if (confirm("Are you sure you want to delete this proposal entry?")) {
-                proposals = proposals.filter(p => p.id !== id);
-                saveProposalsToStorage();
-                renderProposals();
-            }
-        }
-    </script>
+    // App Initialization
+    window.onload = () => {
+      initMap();
+      applyFilters();
+      renderAdminTable();
+    };
+  </script>
 </body>
 </html>
