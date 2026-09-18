@@ -3,544 +3,799 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rishta Pakistan Portal</title>
+  <title>Rishta Portal - Trusted Matches</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome -->
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- EmailJS Integration -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    (function(){
+      emailjs.init("YOUR_PUBLIC_KEY");
+    })();
+  </script>
   <style>
-    #map { height: 350px; width: 100%; z-index: 1; }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+<body class="bg-slate-100 text-slate-800 flex justify-center items-center min-h-screen p-0 sm:p-4">
 
-  <!-- Navigation -->
-  <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <i class="fa-solid fa-heart-hands text-2xl text-emerald-300"></i>
-        <h1 class="text-xl font-bold tracking-wide">Rishta Pakistan Portal</h1>
+  <!-- Mobile Frame Container -->
+  <div class="w-full max-w-md bg-slate-50 min-h-screen sm:min-h-[844px] sm:max-h-[920px] sm:rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden flex flex-col relative">
+
+    <!-- Top App Bar Header -->
+    <header class="bg-white px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 sticky top-0 z-40">
+      <div class="flex items-center gap-3">
+        <!-- Logo -->
+        <div class="w-9 h-9 text-emerald-700 flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">Rishta Portal</h1>
+          <p class="text-[10px] text-slate-400 font-medium tracking-wide">Trusted Matches &bull; Hand Picked &bull; Pakistan Only</p>
+        </div>
       </div>
-      <div class="flex items-center space-x-3">
-        <button id="addProposalBtn" onclick="openProposalModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition">
-          <i class="fa-solid fa-plus me-1"></i> Add Proposal
+      <!-- Three Dots Menu Button -->
+      <button onclick="toggleMenu()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition">
+        <i class="fa-solid fa-ellipsis text-lg"></i>
+      </button>
+
+      <!-- Three Dots Dropdown Menu -->
+      <div id="dropdownMenu" class="hidden absolute right-5 top-14 bg-white shadow-xl rounded-2xl border border-slate-100 p-2 w-56 z-50 text-xs font-semibold">
+        <button onclick="openModal('savedModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 flex items-center justify-between">
+          <span><i class="fa-regular fa-bookmark me-2.5 text-emerald-600"></i>Saved Profiles</span>
+          <span id="savedBadge" class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full text-[10px]">0</span>
         </button>
-        <button id="adminNavBtn" onclick="toggleAdminAuth()" class="bg-emerald-900 hover:bg-emerald-950 text-emerald-100 text-xs font-semibold py-2 px-3 rounded-lg transition border border-emerald-700">
-          Admin Login
+        <button onclick="openModal('historyModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 flex items-center justify-between">
+          <span><i class="fa-solid fa-clock-rotate-left me-2.5 text-slate-500"></i>Browsing History</span>
+          <span id="historyBadge" class="bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full text-[10px]">0</span>
+        </button>
+        <button onclick="openModal('subscribeModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 flex items-center gap-2">
+          <i class="fa-regular fa-bell text-amber-500"></i> City Alerts Subscription
+        </button>
+        <div class="border-t border-slate-100 my-1"></div>
+        <button id="adminMenuBtn" onclick="openModal('loginModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-emerald-800 font-bold flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved"></i> Admin Portal Login
         </button>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- Main Content Area -->
-  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow space-y-6 w-full">
+    <!-- Scrollable Main View -->
+    <main class="flex-grow overflow-y-auto no-scrollbar space-y-4 pb-20">
 
-    <!-- Interactive Map Section -->
-    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">Azad Kashmir Region Selection Map</h2>
-          <p class="text-xs text-slate-500">Click on a district polygon to filter candidate proposals automatically.</p>
-        </div>
-        <button onclick="resetMapFilter()" class="text-xs text-emerald-700 hover:underline font-semibold">
-          Reset Map Filter
-        </button>
-      </div>
-      <div id="map" class="rounded-lg overflow-hidden border border-slate-200"></div>
-    </section>
-
-    <!-- Filters Section -->
-    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4">
-      <div id="selected-region-label" class="text-sm font-medium text-slate-700">
-        Current Region Filter: <strong class="text-emerald-700">All Regions</strong>
-      </div>
-      <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">Gender</label>
-          <select id="filterGender" onchange="applyFilters()" class="border border-slate-300 rounded-lg text-xs p-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
-            <option value="All">All Genders</option>
-            <option value="Bride">Bride</option>
-            <option value="Groom">Groom</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">District</label>
-          <select id="filterDistrict" onchange="applyFilters()" class="border border-slate-300 rounded-lg text-xs p-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
-            <option value="All">All Districts</option>
-            <option value="Bagh">Bagh</option>
-            <option value="Bhimber">Bhimber</option>
-            <option value="Kotli">Kotli</option>
-          </select>
-        </div>
-      </div>
-    </section>
-
-    <!-- Admin Portal Dashboard Section (Hidden by default) -->
-    <section id="adminPortalSection" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-md font-bold text-emerald-900"><i class="fa-solid fa-user-shield me-2"></i>Admin Management Dashboard</h3>
-        <span class="text-xs text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full font-semibold">Logged in as Administrator</span>
-      </div>
-      <div class="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm">
-        <table class="w-full text-left text-xs text-slate-600">
-          <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-            <tr>
-              <th class="p-3">Photo</th>
-              <th class="p-3">ID</th>
-              <th class="p-3">Name</th>
-              <th class="p-3">Gender</th>
-              <th class="p-3">District</th>
-              <th class="p-3">Details</th>
-              <th class="p-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="adminTableBody" class="divide-y divide-slate-100">
-            <!-- Dynamically Rendered Admin Rows -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Public Grid Section -->
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-slate-900">Available Proposals (<span id="proposalCount">0</span>)</h3>
-      </div>
-      <div id="proposalGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <!-- Profile Cards Rendered Here -->
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Login Modal -->
-  <div id="loginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="text-lg font-bold text-slate-900">Admin Login</h3>
-        <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form onsubmit="handleLogin(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Username</label>
-          <input type="text" id="loginUser" required class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-emerald-500 focus:border-emerald-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-          <input type="password" id="loginPass" required class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-emerald-500 focus:border-emerald-500">
-        </div>
-        <p id="loginError" class="text-xs text-rose-600 hidden font-semibold">Invalid Admin credentials.</p>
-        <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs py-2.5 rounded-lg transition">Login</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Contact & Details Modal -->
-  <div id="contactModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="text-lg font-bold text-slate-900">Proposal Information</h3>
-        <button onclick="closeModal('contactModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div id="contactModalBody" class="space-y-3 text-xs text-slate-700">
-        <!-- Rendered dynamically -->
-      </div>
-      <button onclick="closeModal('contactModal')" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-2 rounded-lg">Close</button>
-    </div>
-  </div>
-
-  <!-- Proposal Add/Edit Form Modal -->
-  <div id="proposalFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 id="formModalTitle" class="text-lg font-bold text-slate-900">Add Rishta Proposal</h3>
-        <button onclick="closeModal('proposalFormModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="proposalForm" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs">
-        <input type="hidden" id="editProposalId">
-        <div>
-          <label class="block font-semibold text-slate-600 mb-1">Full Name</label>
-          <input type="text" id="inputName" required class="w-full border border-slate-300 rounded-lg p-2">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Gender</label>
-            <select id="inputGender" class="w-full border border-slate-300 rounded-lg p-2 bg-white">
-              <option value="Bride">Bride</option>
-              <option value="Groom">Groom</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Age</label>
-            <input type="number" id="inputAge" required min="18" max="80" class="w-full border border-slate-300 rounded-lg p-2">
-          </div>
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-600 mb-1">District</label>
-          <select id="inputDistrict" class="w-full border border-slate-300 rounded-lg p-2 bg-white">
-            <option value="Bagh">Bagh</option>
-            <option value="Bhimber">Bhimber</option>
-            <option value="Kotli">Kotli</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-600 mb-1">Phone Number</label>
-          <input type="text" id="inputPhone" required placeholder="+92 300 1234567" class="w-full border border-slate-300 rounded-lg p-2">
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-600 mb-1">Upload Photo (or standard URL)</label>
-          <input type="file" accept="image/*" onchange="handleImageUpload(event)" class="w-full border border-slate-300 rounded-lg p-1 text-slate-500 mb-2">
-          <input type="text" id="inputPhotoUrl" placeholder="Or paste Image URL here" class="w-full border border-slate-300 rounded-lg p-2">
-          <div id="photoPreviewContainer" class="mt-2 hidden items-center space-x-2">
-            <span class="text-slate-500">Preview:</span>
-            <img id="photoPreview" class="w-12 h-12 object-cover rounded border">
-          </div>
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-600 mb-1">Description / Details</label>
-          <textarea id="inputDescription" rows="3" required class="w-full border border-slate-300 rounded-lg p-2"></textarea>
-        </div>
-        <div class="flex justify-end space-x-2 pt-2 border-t">
-          <button type="button" onclick="closeModal('proposalFormModal')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-lg">Cancel</button>
-          <button type="submit" class="bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4 py-2 rounded-lg">Save Proposal</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <footer class="bg-slate-900 text-slate-400 text-center text-xs py-4 mt-auto">
-    &copy; Rishta Pakistan Portal. All rights reserved.
-  </footer>
-
-  <!-- Application Script -->
-  <script>
-    const userGeoJSON = {
-      "type": "FeatureCollection",
-      "features": [
-        {
-          "type": "Feature",
-          "properties": { "GID_0": "PAK", "NAME_0": "Pakistan", "NAME_1": "Azad Kashmir", "NAME_3": "Bagh", "TYPE_3": "District" },
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [[[73.5409545898437,33.90389633178711],[73.49691009521484,33.97720718383795],[73.49163055419928,33.98332214355469],[73.50196075439459,34.024394989013786],[73.51313781738281,34.04160308837896],[73.49790954589844,34.1002769470216],[73.49443054199219,34.12512207031256],[73.59455871582031,34.10368728637701],[73.60157775878918,34.10174179077154],[73.67266082763678,34.121051788330135],[73.72682952880865,34.11981201171881],[73.80748748779303,34.06693267822271],[73.82436370849621,34.057331085205135],[73.8898086547851,34.0424041748048],[73.89817047119152,34.032821655273494],[74.00000000000011,34.03018951416027],[74.00607299804693,34.02244186401373],[74.11498260498053,34.05378341674799],[74.12369537353516,34.055179595947266],[74.19635009765625,34.040084838867244],[74.21467590332031,34.03855514526367],[74.24652862548828,34.01602935791021],[74.24868774414068,34.013820648193416],[74.2632522583009,33.95523071289074],[74.26358032226568,33.942619323730526],[74.21967315673834,33.86717605590826],[74.20762634277344,33.85940170288097],[74.04904937744152,33.80883026123047],[74.0413436889649,33.79899215698242],[74.01819610595703,33.819572448730526],[74.00099945068354,33.83676147460943],[73.97617340087902,33.89598083496094],[73.97043609619152,33.90553283691406],[73.93796539306646,33.894069671630916],[73.92076873779297,33.87688064575201],[73.76412963867188,33.87688064575201],[73.73547363281261,33.88069915771479],[73.63232421875,33.976211547851676],[73.60939788818371,33.9857635498048],[73.58647155761724,33.976211547851676],[73.5409545898437,33.90389633178711]]]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": { "GID_0": "PAK", "NAME_0": "Pakistan", "NAME_1": "Azad Kashmir", "NAME_3": "Bhimber", "TYPE_3": "District" },
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [[[74.39077758789068,32.8017578125],[74.35362243652355,32.78948593139654],[74.31153869628906,32.78596496582037],[74.2615737915039,32.836631774902344],[74.2533950805664,32.8462753295899],[74.20242309570307,32.85983276367199],[74.18348693847668,32.865695953369084],[74.15357971191418,32.893310546875],[74.14402770996105,32.900188446045036],[73.99063873291021,32.94620132446289],[73.96382141113281,32.9433708190918],[73.93629455566418,32.9895133972168],[73.92600250244152,33.001506805419865],[73.90855407714844,32.99806594848627],[73.89191436767578,32.9955406188966],[73.8303451538086,33.01784896850597],[73.8234634399414,33.017486572265625],[73.82907867431646,33.04973220825207],[73.83098602294928,33.076473236083984],[73.87110137939464,33.15288543701172],[73.88447570800781,33.166259765625],[73.87492370605463,33.225296020507926],[73.87492370605463,33.244579315185604],[73.98954010009777,33.25413131713873],[74.0139770507812,33.25094223022472],[74.01427459716803,33.198249816894474],[74.01822662353516,33.19319152832037],[74.08283996582031,33.18074035644531],[74.09986877441406,33.172508239746094],[74.15702819824213,33.12586212158209],[74.17624664306652,33.107151031494254],[74.19064331054688,33.07670974731445],[74.19927215576178,33.04687881469738],[74.24203491210949,33.047294616699276],[74.2549667358399,33.04877471923828],[74.33792114257818,33.02593994140631],[74.34983062744152,33.016250610351676],[74.35317993164068,32.983131408691406],[74.34635925292974,32.9655494689942],[74.3161392211914,32.930160522460994],[74.31803131103516,32.91970062255865],[74.40605163574224,32.90697479248058],[74.41389465332043,32.903949737548885],[74.46605682373047,32.78136062622082],[74.47195434570312,32.77836227416992],[74.39077758789068,32.8017578125]]]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": { "GID_0": "PAK", "NAME_0": "Pakistan", "NAME_1": "Azad Kashmir", "NAME_3": "Kotli", "TYPE_3": "District" },
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [[[74.0139770507812,33.25094223022472],[73.87492370605463,33.244579315185604],[73.87492370605463,33.225296020507926],[73.83863067626964,33.244579315185604],[73.80997467041021,33.26941299438482],[73.72210693359386,33.366836547851676],[73.69535827636724,33.393581390380916],[73.6017532348634,33.44515609741205],[73.56296539306646,33.44404983520508],[73.582992553711,33.46397399902344],[73.5893936157226,33.482902526855526],[73.5815811157226,33.499965667724666],[73.5752639770509,33.50841903686535],[73.59001922607422,33.53139114379883],[73.5966033935548,33.54405212402338],[73.56909942626959,33.61270141601574],[73.55679321289062,33.62844085693365],[73.58616638183594,33.64477920532232],[73.59243011474621,33.653430938720646],[73.62586975097656,33.653564453125],[73.63462829589844,33.65024185180664],[73.64493560791016,33.62997436523443],[73.651031,33.25094223022472]]]
-          }
-        }
-      ]
-    };
-
-    // Load saved proposals from localStorage or default to empty array
-    let proposals = JSON.parse(localStorage.getItem('rishtaProposals')) || [];
-
-    function saveProposals() {
-      localStorage.setItem('rishtaProposals', JSON.stringify(proposals));
-    }
-
-    let isAdminLoggedIn = false;
-    let map, geojsonLayer;
-
-    function initMap() {
-      map = L.map('map').setView([33.5, 73.9], 9);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-
-      geojsonLayer = L.geoJSON(userGeoJSON, {
-        style: { color: '#047857', weight: 2, fillColor: '#10b981', fillOpacity: 0.35 },
-        onEachFeature: function (feature, layer) {
-          const name = feature.properties.NAME_3 || 'Region';
-          layer.bindTooltip(`<b>District:</b> ${name}`, { sticky: true });
-          layer.on('click', function () { selectDistrictFromMap(name); });
-        }
-      }).addTo(map);
-
-      map.fitBounds(geojsonLayer.getBounds());
-    }
-
-    function selectDistrictFromMap(districtName) {
-      document.getElementById('filterDistrict').value = districtName;
-      document.getElementById('selected-region-label').innerHTML = `Current Region Filter: <strong class="text-emerald-700">${districtName} District</strong>`;
-      applyFilters();
-    }
-
-    function resetMapFilter() {
-      document.getElementById('filterDistrict').value = 'All';
-      document.getElementById('selected-region-label').innerHTML = `Current Region Filter: <strong class="text-emerald-700">All Regions</strong>`;
-      if (geojsonLayer) map.fitBounds(geojsonLayer.getBounds());
-      applyFilters();
-    }
-
-    function renderProposals(data) {
-      const grid = document.getElementById('proposalGrid');
-      const countLabel = document.getElementById('proposalCount');
-      grid.innerHTML = '';
-      countLabel.textContent = data.length;
-
-      if (data.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No proposals available. Login as Admin to add new profiles.</div>`;
-        return;
-      }
-
-      data.forEach(p => {
-        const photoSrc = p.photo || 'https://via.placeholder.com/300x300?text=No+Photo';
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between hover:shadow-md transition';
-        card.innerHTML = `
-          <div>
-            <div class="relative h-48 w-full bg-slate-100 overflow-hidden">
-              <img src="${photoSrc}" alt="${p.name}" class="w-full h-full object-cover">
-              <span class="absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${p.gender === 'Bride' ? 'bg-pink-100/90 text-pink-700' : 'bg-blue-100/90 text-blue-700'} backdrop-blur-sm">
-                ${p.gender}
-              </span>
-              <span class="absolute top-3 right-3 text-xs text-white bg-slate-900/60 font-mono px-2 py-0.5 rounded backdrop-blur-sm">${p.id}</span>
-            </div>
-            <div class="p-5">
-              <h4 class="text-lg font-bold text-slate-900">${p.name}</h4>
-              <div class="mt-2 space-y-1.5 text-sm text-slate-600">
-                <p><i class="fa-solid fa-cake-candles text-slate-400 w-4 me-1"></i> ${p.age} years old</p>
-                <p><i class="fa-solid fa-location-dot text-slate-400 w-4 me-1"></i> ${p.district} District</p>
-                <p class="text-xs text-slate-500 line-clamp-2 mt-2 pt-2 border-t border-slate-100">${p.description}</p>
+      <!-- Fictional Graphic Map Section -->
+      <section class="p-3">
+        <!-- View 1: Pakistan Regional SVG Map View -->
+        <div id="countryMapView" class="bg-[#E8F3EE] rounded-3xl p-3 border border-emerald-100/60 shadow-sm relative overflow-hidden">
+          <div class="flex items-start justify-between mb-2">
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 border border-slate-100 shadow-sm max-w-[170px]">
+              <div class="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-1">
+                <i class="fa-solid fa-location-dot"></i> Select Your City
+              </div>
+              <p class="text-[9px] text-slate-400 leading-tight">Choose from every city in Pakistan</p>
+              <div class="relative mt-2">
+                <input type="text" id="mapSearchInput" onkeyup="filterMapCities()" placeholder="Search city..." class="w-full bg-slate-50 text-[10px] pl-6 pr-2 py-1 rounded-lg border border-slate-200 focus:outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute left-2 top-1.5 text-[9px] text-slate-400"></i>
               </div>
             </div>
-          </div>
-          <div class="p-5 pt-0 flex items-center justify-between gap-2">
-            <button onclick="viewDetails('${p.id}')" class="w-full bg-slate-900 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition">
-              View Details
+
+            <button onclick="switchMapMode('lahore')" class="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-1.5 hover:bg-slate-50">
+              <i class="fa-solid fa-chevron-left text-[9px]"></i> Zoom View
             </button>
-            ${isAdminLoggedIn ? `
-              <button onclick="openProposalModal('${p.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 p-2 rounded-lg text-xs" title="Edit">
-                <i class="fa-solid fa-pen"></i>
-              </button>
-              <button onclick="deleteProposal('${p.id}')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 p-2 rounded-lg text-xs" title="Delete">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            ` : ''}
           </div>
-        `;
-        grid.appendChild(card);
-      });
+
+          <!-- Stylized Custom Graphic Map Vector Canvas -->
+          <div class="relative w-full h-[220px] flex items-center justify-center my-1">
+            <svg viewBox="0 0 500 400" class="w-full h-full drop-shadow-md">
+              <!-- Azad Kashmir -->
+              <path d="M 330 50 L 410 80 L 390 140 L 330 110 Z" fill="#F4A28C" stroke="#fff" stroke-width="2"/>
+              <!-- Gilgit Baltistan -->
+              <path d="M 310 20 L 410 20 L 410 80 L 330 50 Z" fill="#95D5B2" stroke="#fff" stroke-width="2"/>
+              <!-- Khyber Pakhtunkhwa -->
+              <path d="M 260 70 L 330 50 L 330 140 L 290 170 L 250 120 Z" fill="#8ECAE6" stroke="#fff" stroke-width="2"/>
+              <!-- Punjab -->
+              <path d="M 290 170 L 390 140 L 370 280 L 280 250 Z" fill="#C7E9C0" stroke="#fff" stroke-width="2"/>
+              <!-- Sindh -->
+              <path d="M 230 270 L 280 250 L 280 370 L 200 350 Z" fill="#FFCB69" stroke="#fff" stroke-width="2"/>
+              <!-- Balochistan -->
+              <path d="M 120 180 L 290 170 L 230 270 L 120 280 Z" fill="#FFE3A8" stroke="#fff" stroke-width="2"/>
+
+              <!-- Interactive City Markers -->
+              <g onclick="selectCityFilter('Lahore')" class="cursor-pointer hover:opacity-80">
+                <circle cx="340" cy="210" r="5" fill="#1B4332"/>
+                <text x="348" y="213" font-size="11" font-weight="bold" fill="#1B4332">Lahore</text>
+              </g>
+              <g onclick="selectCityFilter('Islamabad')" class="cursor-pointer hover:opacity-80">
+                <circle cx="330" cy="150" r="5" fill="#1B4332"/>
+                <text x="338" y="153" font-size="11" font-weight="bold" fill="#1B4332">Islamabad</text>
+              </g>
+              <g onclick="selectCityFilter('Karachi')" class="cursor-pointer hover:opacity-80">
+                <circle cx="230" cy="340" r="5" fill="#1B4332"/>
+                <text x="238" y="343" font-size="11" font-weight="bold" fill="#1B4332">Karachi</text>
+              </g>
+              <g onclick="selectCityFilter('Peshawar')" class="cursor-pointer hover:opacity-80">
+                <circle cx="280" cy="110" r="5" fill="#1B4332"/>
+                <text x="288" y="113" font-size="11" font-weight="bold" fill="#1B4332">Peshawar</text>
+              </g>
+              <g onclick="selectCityFilter('Quetta')" class="cursor-pointer hover:opacity-80">
+                <circle cx="200" cy="220" r="5" fill="#1B4332"/>
+                <text x="208" y="223" font-size="11" font-weight="bold" fill="#1B4332">Quetta</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Map Footer Legend -->
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[9px] text-emerald-900 font-bold bg-white/80 px-2.5 py-1 rounded-full border border-emerald-200">
+              <i class="fa-solid fa-shield-check text-emerald-600 me-1"></i> 100% Verified Pakistani Profiles
+            </span>
+            <button onclick="resetCityFilter()" class="bg-white/95 text-emerald-800 text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm border border-slate-200">
+              View All Cities <i class="fa-solid fa-chevron-right text-[8px] ms-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- View 2: Detailed Graphic Zoomed City View (Lahore Graphic Layout) -->
+        <div id="cityZoomView" class="hidden bg-[#E1F2E8] rounded-3xl p-3 border border-emerald-200/80 shadow-sm relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <div class="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-xs font-extrabold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-location-dot text-emerald-700"></i> <span id="currentZoomCity">Lahore Zoom View</span>
+            </div>
+            <button onclick="switchMapMode('country')" class="bg-white/90 text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-1">
+              <i class="fa-solid fa-chevron-left text-[8px]"></i> Change City
+            </button>
+          </div>
+
+          <!-- Fictional Graphic Vector Canvas for City Zoom Details -->
+          <div class="relative w-full h-[210px] bg-[#EAF5EF] rounded-2xl border border-emerald-100 overflow-hidden flex items-center justify-center p-2">
+            <svg viewBox="0 0 400 250" class="w-full h-full">
+              <!-- Town Boundaries -->
+              <path d="M 40 40 Q 150 20 220 80 T 180 200 T 50 180 Z" fill="#D2EBD9" stroke="#A7D7B5" stroke-width="2" stroke-dasharray="4"/>
+              <path d="M 180 50 Q 320 40 360 120 T 260 220 T 170 150 Z" fill="#C3E6CC" stroke="#90CFA0" stroke-width="2" stroke-dasharray="4"/>
+
+              <!-- Town Labels -->
+              <text x="110" y="60" font-size="10" font-weight="bold" fill="#2D6A4F">Shalimar Town</text>
+              <text x="100" y="120" font-size="10" font-weight="bold" fill="#2D6A4F">Gulberg</text>
+              <text x="80" y="160" font-size="10" font-weight="bold" fill="#2D6A4F">Model Town</text>
+              <text x="130" y="195" font-size="10" font-weight="bold" fill="#2D6A4F">Johar Town</text>
+              <text x="240" y="210" font-size="10" font-weight="bold" fill="#2D6A4F">DHA</text>
+              <text x="220" y="100" font-size="14" font-weight="900" fill="#1B4332">Lahore Center</text>
+
+              <!-- Map Pins -->
+              <circle cx="200" cy="110" r="6" fill="#1B4332"/>
+              <circle cx="140" cy="100" r="5" fill="#2D6A4F"/>
+              <circle cx="110" cy="135" r="5" fill="#2D6A4F"/>
+              <circle cx="180" cy="170" r="5" fill="#2D6A4F"/>
+              <circle cx="225" cy="150" r="5" fill="#2D6A4F"/>
+              <circle cx="260" cy="185" r="5" fill="#2D6A4F"/>
+            </svg>
+
+            <div class="absolute bottom-2 right-2 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
+              <i class="fa-solid fa-location-dot text-emerald-700 text-xs"></i>
+              <span class="text-[10px] font-bold text-slate-700">Showing results for <strong class="text-emerald-800" id="zoomCityTag">Lahore</strong></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Horizontal Filter Pills -->
+      <section class="px-4">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <button onclick="setActiveFilter(this, 'All')" class="filter-pill bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap shadow-sm">All</button>
+          <button onclick="setActiveFilter(this, 'Educated')" class="filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition">Educated</button>
+          <button onclick="setActiveFilter(this, 'Professional')" class="filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition">Professional</button>
+          <button onclick="setActiveFilter(this, 'Family Values')" class="filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition">Family Values</button>
+        </div>
+      </section>
+
+      <!-- Proposal Cards Stream -->
+      <section class="px-4 space-y-4" id="cardsContainer">
+        <!-- Rendered dynamically -->
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar matching UI mockup -->
+    <nav class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between absolute bottom-0 left-0 right-0 z-40">
+      <button onclick="switchTab('home')" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
+        <i class="fa-solid fa-house text-base"></i>
+        <span class="text-[10px]">Home</span>
+      </button>
+      <button onclick="switchTab('cities')" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
+        <i class="fa-solid fa-location-dot text-base"></i>
+        <span class="text-[10px]">Cities</span>
+      </button>
+      <button onclick="switchTab('about')" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
+        <i class="fa-circle-info fa-solid text-base"></i>
+        <span class="text-[10px]">About</span>
+      </button>
+    </nav>
+
+    <!-- Modal 1: Saved Profiles Modal -->
+    <div id="savedModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col">
+        <div class="flex justify-between items-center border-b pb-2.5">
+          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-bookmark text-emerald-600"></i> Saved Profiles</h3>
+          <button onclick="closeModal('savedModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div id="savedListContainer" class="flex-grow overflow-y-auto space-y-2.5 no-scrollbar"></div>
+        <button onclick="closeModal('savedModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
+      </div>
+    </div>
+
+    <!-- Modal 2: Browsing History Modal -->
+    <div id="historyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col">
+        <div class="flex justify-between items-center border-b pb-2.5">
+          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-slate-500"></i> Browsing History</h3>
+          <button onclick="closeModal('historyModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div id="historyListContainer" class="flex-grow overflow-y-auto space-y-2 no-scrollbar"></div>
+        <div class="flex justify-between items-center pt-2">
+          <button onclick="clearHistory()" class="text-xs text-rose-600 font-bold hover:underline">Clear History</button>
+          <button onclick="closeModal('historyModal')" class="bg-slate-100 text-slate-800 font-bold text-xs py-2 px-4 rounded-xl">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 3: City Alerts Modal -->
+    <div id="subscribeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
+        <div class="flex justify-between items-center border-b pb-2.5">
+          <h3 class="text-base font-extrabold text-slate-900"><i class="fa-regular fa-bell text-amber-500 me-2"></i>City Rishta Alerts</h3>
+          <button onclick="closeModal('subscribeModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form onsubmit="handleCitySubscribe(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Your Email Address</label>
+            <input type="email" id="subEmail" required placeholder="name@gmail.com" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Target City (Any City in Pakistan)</label>
+            <input type="text" id="subCity" required placeholder="e.g. Lahore, Islamabad, Karachi" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <p id="subSuccess" class="text-xs text-emerald-700 font-bold hidden"><i class="fa-solid fa-circle-check me-1"></i> Subscribed! You will receive Gmail alerts for new proposals in this city.</p>
+          <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition">Subscribe to Alerts</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 4: Candidate Detail Modal -->
+    <div id="detailModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="text-base font-extrabold text-slate-900">Candidate Details</h3>
+          <button onclick="closeModal('detailModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div id="detailModalBody" class="space-y-2 text-xs"></div>
+        <button onclick="closeModal('detailModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
+      </div>
+    </div>
+
+    <!-- Modal 5: Admin Login / Dashboard Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="text-base font-extrabold text-slate-900"><i class="fa-solid fa-shield-halved text-emerald-800 me-2"></i>Admin Access</h3>
+          <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Admin Username</label>
+            <input type="text" id="adminUser" required class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Admin Password</label>
+            <input type="password" id="adminPass" required class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
+          </div>
+          <p id="loginError" class="text-xs text-rose-600 hidden font-bold">Invalid Admin Credentials.</p>
+          <button type="submit" class="w-full bg-emerald-800 text-white font-bold py-2.5 rounded-xl">Login as Admin</button>
+        </form>
+
+        <!-- Admin Control Area (Visible after auth) -->
+        <div id="adminControls" class="hidden space-y-3 pt-2">
+          <p class="text-xs text-emerald-700 font-bold"><i class="fa-solid fa-circle-check me-1"></i> Admin Authenticated</p>
+          <button onclick="openAddProposalModal()" class="w-full bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i> Release New Proposal
+          </button>
+          <button onclick="handleAdminLogout()" class="w-full bg-rose-100 text-rose-700 font-bold py-2 rounded-xl text-xs">Logout Admin</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 6: Add / Edit Proposal Modal -->
+    <div id="proposalFormModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto no-scrollbar">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 id="formTitle" class="text-base font-extrabold text-slate-900">Add Proposal</h3>
+          <button onclick="closeModal('proposalFormModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form onsubmit="saveProposal(event)" class="space-y-2.5 text-xs">
+          <input type="hidden" id="editId">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Full Name</label>
+            <input type="text" id="fieldName" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Age</label>
+              <input type="text" id="fieldAge" required placeholder="24 Years" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Height</label>
+              <input type="text" id="fieldHeight" required placeholder="5'4&quot;" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">City</label>
+            <input type="text" id="fieldCity" required placeholder="Lahore" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Education</label>
+            <input type="text" id="fieldEducation" required placeholder="Bachelors in Computer Science" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Profession</label>
+            <input type="text" id="fieldProfession" required placeholder="Software Engineer" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Recipient Email (Optional)</label>
+            <input type="email" id="fieldEmail" placeholder="candidate@gmail.com" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Image URL</label>
+            <input type="text" id="fieldPhoto" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Description</label>
+            <textarea id="fieldBio" rows="2" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50"></textarea>
+          </div>
+          <button type="submit" class="w-full bg-emerald-800 text-white font-bold py-2.5 rounded-xl">Save & Release Proposal</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Initial Dataset matching UI screenshots exactly
+    const defaultProposals = [
+      {
+        id: "p1",
+        name: "Ayesha Khan",
+        age: "24 Years",
+        height: "5'4\"",
+        city: "Lahore",
+        education: "Bachelors in Computer Science",
+        profession: "Software Engineer",
+        maritalStatus: "Never Married",
+        bio: "Simple, kind and family-oriented. Looking for a partner who values faith and growth.",
+        tags: ["Educated", "Professional", "Family Values"],
+        photos: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=80"],
+        photosCount: "1/5",
+        email: "ayesha@gmail.com"
+      },
+      {
+        id: "p2",
+        name: "Fatima Ali",
+        age: "27 Years",
+        height: "5'2\"",
+        city: "Islamabad",
+        education: "Masters in Business Administration",
+        profession: "Marketing Specialist",
+        maritalStatus: "Never Married",
+        bio: "Loves traveling, good food and meaningful conversations. Hoping to find a life partner.",
+        tags: ["Ambitious", "Well Mannered", "Travel Lover"],
+        photos: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80"],
+        photosCount: "1/4",
+        email: "fatima@gmail.com"
+      },
+      {
+        id: "p3",
+        name: "Sara Ahmed",
+        age: "26 Years",
+        height: "5'3\"",
+        city: "Karachi",
+        education: "Bachelors in Medicine",
+        profession: "Doctor",
+        maritalStatus: "Never Married",
+        bio: "Faith, family and kindness are the most important things in my life.",
+        tags: ["Caring", "Respectful", "Family Oriented"],
+        photos: ["https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80"],
+        photosCount: "1/4",
+        email: "sara@gmail.com"
+      },
+      {
+        id: "p4",
+        name: "Hira Khan",
+        age: "23 Years",
+        height: "5'1\"",
+        city: "Peshawar",
+        education: "Bachelors in Pharmacy",
+        profession: "Pharmacist",
+        maritalStatus: "Never Married",
+        bio: "Hardworking, positive and always believe in making a better tomorrow.",
+        tags: ["Hardworking", "Positive", "Simple Life"],
+        photos: ["https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop&q=80"],
+        photosCount: "1/4",
+        email: "hira@gmail.com"
+      }
+    ];
+
+    // Local Storage State Management
+    let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || defaultProposals;
+    let savedIds = JSON.parse(localStorage.getItem('rp_saved')) || [];
+    let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
+    let subscribers = JSON.parse(localStorage.getItem('rp_subscribers')) || [];
+    let isAdmin = false;
+    let activeCityFilter = 'All';
+    let activeCategoryFilter = 'All';
+
+    function saveData() {
+      localStorage.setItem('rp_proposals', JSON.stringify(proposals));
+      localStorage.setItem('rp_saved', JSON.stringify(savedIds));
+      localStorage.setItem('rp_history', JSON.stringify(browsingHistory));
+      localStorage.setItem('rp_subscribers', JSON.stringify(subscribers));
+      updateBadges();
     }
 
-    function renderAdminTable() {
-      const tbody = document.getElementById('adminTableBody');
-      tbody.innerHTML = '';
+    function updateBadges() {
+      document.getElementById('savedBadge').textContent = savedIds.length;
+      document.getElementById('historyBadge').textContent = browsingHistory.length;
+    }
 
-      if (proposals.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">No profiles created yet. Click "Add Proposal" above to create one.</td></tr>`;
+    function toggleMenu() {
+      document.getElementById('dropdownMenu').classList.toggle('hidden');
+    }
+
+    function openModal(id) {
+      document.getElementById('dropdownMenu').classList.add('hidden');
+      if (id === 'savedModal') renderSavedModal();
+      if (id === 'historyModal') renderHistoryModal();
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById(id).classList.add('flex');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).classList.remove('flex');
+    }
+
+    // Map Mode Switcher
+    function switchMapMode(mode) {
+      if (mode === 'lahore') {
+        document.getElementById('countryMapView').classList.add('hidden');
+        document.getElementById('cityZoomView').classList.remove('hidden');
+      } else {
+        document.getElementById('cityZoomView').classList.add('hidden');
+        document.getElementById('countryMapView').classList.remove('hidden');
+      }
+    }
+
+    function selectCityFilter(city) {
+      activeCityFilter = city;
+      document.getElementById('zoomCityTag').textContent = city;
+      document.getElementById('currentZoomCity').textContent = city + " Zoom View";
+      switchMapMode('lahore');
+      renderCards();
+    }
+
+    function resetCityFilter() {
+      activeCityFilter = 'All';
+      switchMapMode('country');
+      renderCards();
+    }
+
+    function setActiveFilter(btn, category) {
+      document.querySelectorAll('.filter-pill').forEach(el => {
+        el.className = "filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition";
+      });
+      btn.className = "filter-pill bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap shadow-sm";
+      activeCategoryFilter = category;
+      renderCards();
+    }
+
+    // Toggle Saved Candidate
+    function toggleSave(id) {
+      if (savedIds.includes(id)) {
+        savedIds = savedIds.filter(item => item !== id);
+      } else {
+        savedIds.push(id);
+      }
+      saveData();
+      renderCards();
+    }
+
+    // View Details and trigger EmailJS
+    function viewCandidateDetails(id) {
+      const p = proposals.find(item => item.id === id);
+      if (!p) return;
+
+      // History tracking
+      if (!browsingHistory.some(h => h.id === p.id)) {
+        browsingHistory.unshift({ ...p, viewedAt: new Date().toLocaleTimeString() });
+        saveData();
+      }
+
+      // EmailJS Notification Trigger
+      if (p.email) {
+        emailjs.send("YOUR_SERVICE_ID", "YOUR_VIEW_TEMPLATE_ID", {
+          to_email: p.email,
+          candidate_name: p.name,
+          view_time: new Date().toLocaleString()
+        }).catch(err => console.log("Email dispatch failure:", err));
+      }
+
+      const body = document.getElementById('detailModalBody');
+      body.innerHTML = `
+        <img src="${p.photos[0]}" class="w-full h-40 object-cover rounded-2xl mb-2">
+        <h4 class="text-sm font-extrabold text-slate-900">${p.name}</h4>
+        <p class="text-slate-500">${p.age} &bull; ${p.height} &bull; ${p.city}</p>
+        <p><strong>Education:</strong> ${p.education}</p>
+        <p><strong>Profession:</strong> ${p.profession}</p>
+        <p class="text-slate-600 pt-1 border-t border-slate-100 mt-1">${p.bio}</p>
+      `;
+      openModal('detailModal');
+    }
+
+    function renderSavedModal() {
+      const container = document.getElementById('savedListContainer');
+      container.innerHTML = '';
+      const savedList = proposals.filter(p => savedIds.includes(p.id));
+
+      if (savedList.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No saved profiles yet.</p>`;
         return;
       }
 
-      proposals.forEach(p => {
-        const photoSrc = p.photo || 'https://via.placeholder.com/50?text=N/A';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td class="p-3">
-            <img src="${photoSrc}" class="w-10 h-10 object-cover rounded-full border border-slate-200">
-          </td>
-          <td class="p-3 font-mono text-xs text-slate-500">${p.id}</td>
-          <td class="p-3 font-medium text-slate-900">${p.name}</td>
-          <td class="p-3">${p.gender}</td>
-          <td class="p-3">${p.district}</td>
-          <td class="p-3 text-xs text-slate-500 max-w-xs truncate">${p.description}</td>
-          <td class="p-3 text-right space-x-2">
-            <button onclick="openProposalModal('${p.id}')" class="text-amber-600 hover:text-amber-800 text-xs font-semibold">Edit</button>
-            <button onclick="deleteProposal('${p.id}')" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">Delete</button>
-          </td>
+      savedList.forEach(p => {
+        container.innerHTML += `
+          <div class="flex items-center justify-between p-2 bg-slate-50 rounded-2xl border border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <img src="${p.photos[0]}" class="w-10 h-10 rounded-xl object-cover">
+              <div>
+                <h5 class="text-xs font-bold text-slate-900">${p.name}</h5>
+                <p class="text-[10px] text-slate-500">${p.city}</p>
+              </div>
+            </div>
+            <button onclick="toggleSave('${p.id}')" class="text-xs text-rose-600 font-bold px-2 py-1">Remove</button>
+          </div>
         `;
-        tbody.appendChild(row);
       });
     }
 
-    function applyFilters() {
-      const gender = document.getElementById('filterGender').value;
-      const district = document.getElementById('filterDistrict').value;
+    function renderHistoryModal() {
+      const container = document.getElementById('historyListContainer');
+      container.innerHTML = '';
 
-      let filtered = proposals.filter(p => {
-        const matchGender = (gender === 'All' || p.gender === gender);
-        const matchDistrict = (district === 'All' || p.district === district);
-        return matchGender && matchDistrict;
-      });
-
-      renderProposals(filtered);
-    }
-
-    function toggleAdminAuth() {
-      if (isAdminLoggedIn) {
-        isAdminLoggedIn = false;
-        document.getElementById('adminNavBtn').textContent = 'Admin Login';
-        document.getElementById('adminPortalSection').classList.add('hidden');
-        document.getElementById('addProposalBtn').classList.add('hidden');
-        applyFilters();
-      } else {
-        openModal('loginModal');
+      if (browsingHistory.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No history recorded.</p>`;
+        return;
       }
+
+      browsingHistory.forEach(item => {
+        container.innerHTML += `
+          <div class="flex items-center justify-between p-2 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
+            <div>
+              <p class="font-bold text-slate-900">${item.name}</p>
+              <p class="text-[10px] text-slate-400">${item.city} &bull; Viewed ${item.viewedAt}</p>
+            </div>
+            <button onclick="viewCandidateDetails('${item.id}')" class="text-[10px] bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded-lg">View</button>
+          </div>
+        `;
+      });
     }
 
-    function handleLogin(e) {
-      e.preventDefault();
-      const u = document.getElementById('loginUser').value;
-      const p = document.getElementById('loginPass').value;
+    function clearHistory() {
+      browsingHistory = [];
+      saveData();
+      renderHistoryModal();
+    }
 
-      if (u === 'ADMINNASEEM' && p === 'NASEEMPAK2000RISHTA@12345') {
-        isAdminLoggedIn = true;
+    function handleCitySubscribe(e) {
+      e.preventDefault();
+      const email = document.getElementById('subEmail').value;
+      const city = document.getElementById('subCity').value;
+
+      subscribers.push({ email, city: city.toLowerCase() });
+      saveData();
+
+      document.getElementById('subSuccess').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('subSuccess').classList.add('hidden');
+        closeModal('subscribeModal');
+      }, 1800);
+    }
+
+    // Admin Auth
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('adminUser').value;
+      const p = document.getElementById('adminPass').value;
+
+      if (u === 'ADMINNASEEM' && p === 'XXXNASEEMXXXRISHTAXXX2000XXX') {
+        isAdmin = true;
+        document.getElementById('adminLoginForm').classList.add('hidden');
+        document.getElementById('adminControls').classList.remove('hidden');
         document.getElementById('loginError').classList.add('hidden');
-        document.getElementById('loginUser').value = '';
-        document.getElementById('loginPass').value = '';
-        closeModal('loginModal');
-        
-        document.getElementById('adminNavBtn').textContent = 'Logout Admin';
-        document.getElementById('adminPortalSection').classList.remove('hidden');
-        document.getElementById('addProposalBtn').classList.remove('hidden');
-        
-        applyFilters();
-        renderAdminTable();
+        renderCards();
       } else {
         document.getElementById('loginError').classList.remove('hidden');
       }
     }
 
-    function handleImageUpload(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          document.getElementById('inputPhotoUrl').value = evt.target.result;
-          document.getElementById('photoPreview').src = evt.target.result;
-          document.getElementById('photoPreviewContainer').classList.remove('hidden');
-          document.getElementById('photoPreviewContainer').classList.add('flex');
-        };
-        reader.readAsDataURL(file);
-      }
+    function handleAdminLogout() {
+      isAdmin = false;
+      document.getElementById('adminLoginForm').classList.remove('hidden');
+      document.getElementById('adminControls').classList.add('hidden');
+      closeModal('loginModal');
+      renderCards();
     }
 
-    function openProposalModal(editId = null) {
-      if (!isAdminLoggedIn) return;
-
-      const form = document.getElementById('proposalForm');
-      form.reset();
-      document.getElementById('inputPhotoUrl').value = '';
-      document.getElementById('photoPreviewContainer').classList.add('hidden');
-      document.getElementById('photoPreviewContainer').classList.remove('flex');
-      
-      if (editId) {
-        const item = proposals.find(p => p.id === editId);
-        if (item) {
-          document.getElementById('formModalTitle').textContent = 'Edit Rishta Proposal';
-          document.getElementById('editProposalId').value = item.id;
-          document.getElementById('inputName').value = item.name;
-          document.getElementById('inputGender').value = item.gender;
-          document.getElementById('inputAge').value = item.age;
-          document.getElementById('inputDistrict').value = item.district;
-          document.getElementById('inputDescription').value = item.description;
-          document.getElementById('inputPhone').value = item.phone;
-          if (item.photo) {
-            document.getElementById('inputPhotoUrl').value = item.photo;
-            document.getElementById('photoPreview').src = item.photo;
-            document.getElementById('photoPreviewContainer').classList.remove('hidden');
-            document.getElementById('photoPreviewContainer').classList.add('flex');
-          }
-        }
-      } else {
-        document.getElementById('formModalTitle').textContent = 'Add Rishta Proposal';
-        document.getElementById('editProposalId').value = '';
-      }
-
+    function openAddProposalModal() {
+      closeModal('loginModal');
+      document.getElementById('editId').value = '';
       openModal('proposalFormModal');
     }
 
-    function handleFormSubmit(e) {
+    function saveProposal(e) {
       e.preventDefault();
-      if (!isAdminLoggedIn) return;
-
-      const editId = document.getElementById('editProposalId').value;
-      const data = {
-        name: document.getElementById('inputName').value,
-        gender: document.getElementById('inputGender').value,
-        age: parseInt(document.getElementById('inputAge').value),
-        district: document.getElementById('inputDistrict').value,
-        description: document.getElementById('inputDescription').value,
-        phone: document.getElementById('inputPhone').value,
-        photo: document.getElementById('inputPhotoUrl').value || 'https://via.placeholder.com/300x300?text=No+Photo'
+      const editId = document.getElementById('editId').value;
+      const newP = {
+        id: editId || 'p_' + Date.now(),
+        name: document.getElementById('fieldName').value,
+        age: document.getElementById('fieldAge').value,
+        height: document.getElementById('fieldHeight').value,
+        city: document.getElementById('fieldCity').value,
+        education: document.getElementById('fieldEducation').value,
+        profession: document.getElementById('fieldProfession').value,
+        maritalStatus: "Never Married",
+        bio: document.getElementById('fieldBio').value,
+        tags: ["Hand Picked", "Verified"],
+        photos: [document.getElementById('fieldPhoto').value],
+        photosCount: "1/4",
+        email: document.getElementById('fieldEmail').value
       };
 
       if (editId) {
-        const idx = proposals.findIndex(p => p.id === editId);
-        if (idx !== -1) {
-          proposals[idx] = { id: editId, ...data };
-        }
+        const index = proposals.findIndex(x => x.id === editId);
+        if (index !== -1) proposals[index] = newP;
       } else {
-        const newId = 'PAK-' + String(Date.now()).slice(-4);
-        proposals.push({ id: newId, ...data });
+        proposals.unshift(newP);
+        // Dispatch alerts to matching subscribers
+        const match = subscribers.filter(s => s.city === newP.city.toLowerCase());
+        match.forEach(sub => {
+          emailjs.send("YOUR_SERVICE_ID", "YOUR_ALERT_TEMPLATE_ID", {
+            to_email: sub.email,
+            city: newP.city,
+            candidate_name: newP.name
+          }).catch(err => console.log(err));
+        });
       }
 
-      saveProposals();
+      saveData();
       closeModal('proposalFormModal');
-      applyFilters();
-      renderAdminTable();
+      renderCards();
+    }
+
+    function editProposal(id) {
+      const p = proposals.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('editId').value = p.id;
+      document.getElementById('fieldName').value = p.name;
+      document.getElementById('fieldAge').value = p.age;
+      document.getElementById('fieldHeight').value = p.height;
+      document.getElementById('fieldCity').value = p.city;
+      document.getElementById('fieldEducation').value = p.education;
+      document.getElementById('fieldProfession').value = p.profession;
+      document.getElementById('fieldBio').value = p.bio;
+      document.getElementById('fieldPhoto').value = p.photos[0];
+      openModal('proposalFormModal');
     }
 
     function deleteProposal(id) {
-      if (!isAdminLoggedIn) return;
-      if (confirm(`Are you sure you want to delete proposal ${id}?`)) {
-        proposals = proposals.filter(p => p.id !== id);
-        saveProposals();
-        applyFilters();
-        renderAdminTable();
+      if (confirm('Delete this proposal?')) {
+        proposals = proposals.filter(x => x.id !== id);
+        saveData();
+        renderCards();
       }
     }
 
-    function viewDetails(id) {
-      const p = proposals.find(item => item.id === id);
-      if (!p) return;
-      const photoSrc = p.photo || 'https://via.placeholder.com/300x300?text=No+Photo';
-      const body = document.getElementById('contactModalBody');
-      body.innerHTML = `
-        <div class="bg-slate-50 p-4 rounded-lg space-y-3 border border-slate-200">
-          <div class="w-full h-56 rounded-lg overflow-hidden border border-slate-300">
-            <img src="${photoSrc}" class="w-full h-full object-cover">
+    // Render Cards 1-to-1 matching UI reference
+    function renderCards() {
+      const container = document.getElementById('cardsContainer');
+      container.innerHTML = '';
+
+      let list = proposals.filter(p => {
+        const matchCity = (activeCityFilter === 'All' || p.city.toLowerCase() === activeCityFilter.toLowerCase());
+        const matchCat = (activeCategoryFilter === 'All' || p.tags.includes(activeCategoryFilter));
+        return matchCity && matchCat;
+      });
+
+      if (list.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">No profiles found matching selected criteria.</p>`;
+        return;
+      }
+
+      list.forEach(p => {
+        const isSaved = savedIds.includes(p.id);
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-3xl p-3.5 border border-slate-100 shadow-sm flex gap-3.5 relative overflow-hidden";
+
+        card.innerHTML = `
+          <!-- Image Box -->
+          <div class="relative w-28 h-36 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-100">
+            <img src="${p.photos[0]}" class="w-full h-full object-cover">
+            <span class="absolute top-2 left-2 bg-emerald-900/80 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <i class="fa-solid fa-check-circle text-[8px]"></i> Hand Picked
+            </span>
+            <span class="absolute bottom-2 left-2 bg-slate-900/60 backdrop-blur-md text-white text-[9px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+              <i class="fa-regular fa-image text-[8px]"></i> ${p.photosCount || '1/4'}
+            </span>
           </div>
-          <div class="space-y-1 pt-1">
-            <p><strong>ID:</strong> <span class="font-mono text-xs">${p.id}</span></p>
-            <p><strong>Name:</strong> ${p.name}</p>
-            <p><strong>Gender:</strong> ${p.gender}</p>
-            <p><strong>Age:</strong> ${p.age} years old</p>
-            <p><strong>District:</strong> ${p.district}</p>
-            <p><strong>Contact Phone:</strong> <span class="text-emerald-700 font-semibold">${p.phone}</span></p>
+
+          <!-- Card Content Body -->
+          <div class="flex-grow flex flex-col justify-between py-0.5">
+            <div>
+              <div class="flex items-start justify-between">
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">${p.name}</h3>
+                <button onclick="toggleSave('${p.id}')" class="text-slate-400 hover:text-emerald-700 transition">
+                  <i class="${isSaved ? 'fa-solid text-emerald-700' : 'fa-regular'} fa-heart text-base"></i>
+                </button>
+              </div>
+
+              <!-- Metadata Info list -->
+              <div class="mt-1 space-y-1 text-slate-500 text-[11px] font-medium">
+                <p class="text-slate-700 font-bold">${p.age} &bull; ${p.height} &bull; <span class="text-emerald-800">${p.city}</span></p>
+                <p class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-graduation-cap text-slate-400 w-3"></i> ${p.education}</p>
+                <p class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-briefcase text-slate-400 w-3"></i> ${p.profession}</p>
+              </div>
+
+              <p class="text-[11px] text-slate-500 leading-snug mt-2 line-clamp-2">${p.bio}</p>
+            </div>
+
+            <!-- Tags Row -->
+            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+              ${p.tags.map(t => `<span class="bg-emerald-50 text-emerald-800 text-[9px] font-bold px-2.5 py-1 rounded-lg">${t}</span>`).join('')}
+            </div>
+
+            <!-- Admin Actions Bar -->
+            ${isAdmin ? `
+              <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+                <button onclick="editProposal('${p.id}')" class="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-lg">Edit</button>
+                <button onclick="deleteProposal('${p.id}')" class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-lg">Delete</button>
+                <button onclick="viewCandidateDetails('${p.id}')" class="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-lg ms-auto">Preview</button>
+              </div>
+            ` : `
+              <button onclick="viewCandidateDetails('${p.id}')" class="w-full mt-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[10px] font-bold py-1.5 rounded-xl transition border border-slate-200/60">
+                View Details
+              </button>
+            `}
           </div>
-          <div class="pt-2 border-t border-slate-200">
-            <strong class="block mb-1">Description / Details:</strong>
-            <p class="text-xs text-slate-600 leading-relaxed">${p.description}</p>
-          </div>
-        </div>
-      `;
-      openModal('contactModal');
+        `;
+        container.appendChild(card);
+      });
     }
 
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+    function switchTab(tab) {
+      if (tab === 'home') {
+        resetCityFilter();
+      } else if (tab === 'cities') {
+        switchMapMode('country');
+      }
+    }
 
     window.onload = () => {
-      initMap();
-      applyFilters();
+      saveData();
+      renderCards();
     };
   </script>
 </body>
