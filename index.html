@@ -8,6 +8,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Leaflet CSS & JS for Real Maps with Smooth Transitions -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- EmailJS Integration -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
@@ -20,6 +23,17 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Custom Styling for Real Leaflet Map Container */
+    #leafletMap {
+      width: 100%;
+      height: 230px;
+      border-radius: 1.5rem;
+      z-index: 10;
+    }
+    .leaflet-control-zoom { display: none !important; }
+    .leaflet-attribution-flag { display: none !important; }
+    .leaflet-container { font-family: 'Plus Jakarta Sans', sans-serif !important; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex justify-center items-center min-h-screen p-0 sm:p-4">
@@ -67,151 +81,82 @@
     </header>
 
     <!-- Scrollable Main View -->
-    <main class="flex-grow overflow-y-auto no-scrollbar space-y-4 pb-20">
+    <main class="flex-grow overflow-y-auto no-scrollbar space-y-3 pb-20">
 
-      <!-- Fictional Graphic Map Section -->
-      <section class="p-3">
-        <!-- View 1: Pakistan Regional SVG Map View -->
-        <div id="countryMapView" class="bg-[#E8F3EE] rounded-3xl p-3 border border-emerald-100/60 shadow-sm relative overflow-hidden">
-          <div class="flex items-start justify-between mb-2">
-            <div class="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 border border-slate-100 shadow-sm max-w-[170px]">
-              <div class="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-1">
-                <i class="fa-solid fa-location-dot"></i> Select Your City
-              </div>
-              <p class="text-[9px] text-slate-400 leading-tight">Choose from every city in Pakistan</p>
-              <div class="relative mt-2">
-                <input type="text" id="mapSearchInput" onkeyup="filterMapCities()" placeholder="Search city..." class="w-full bg-slate-50 text-[10px] pl-6 pr-2 py-1 rounded-lg border border-slate-200 focus:outline-none">
-                <i class="fa-solid fa-magnifying-glass absolute left-2 top-1.5 text-[9px] text-slate-400"></i>
-              </div>
+      <!-- Dynamic Real Leaflet Map View Container -->
+      <section class="p-3 pb-1">
+        <div class="relative bg-emerald-900/5 rounded-3xl p-2 border border-emerald-100 shadow-sm overflow-hidden">
+          
+          <!-- Floating Map Overlay Control (Top Left) -->
+          <div class="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 border border-slate-100 shadow-md max-w-[170px]">
+            <div class="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-0.5">
+              <i class="fa-solid fa-location-dot"></i> Select Your City
             </div>
+            <p class="text-[9px] text-slate-400 leading-tight">Choose from every city in Pakistan</p>
+            <div class="relative mt-2">
+              <input type="text" id="mapSearchInput" onkeyup="filterMapSearch(this.value)" placeholder="Search city..." class="w-full bg-slate-50 text-[10px] pl-6 pr-2 py-1 rounded-lg border border-slate-200 focus:outline-none">
+              <i class="fa-solid fa-magnifying-glass absolute left-2 top-1.5 text-[9px] text-slate-400"></i>
+            </div>
+          </div>
 
-            <button onclick="switchMapMode('lahore')" class="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-1.5 hover:bg-slate-50">
-              <i class="fa-solid fa-chevron-left text-[9px]"></i> Zoom View
+          <!-- Floating Map Mode Reset/Toggle (Top Right) -->
+          <div class="absolute top-4 right-4 z-20">
+            <button id="mapResetBtn" onclick="zoomToPakistanOverview()" class="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-1.5 hover:bg-slate-50 transition">
+              <i class="fa-solid fa-globe text-emerald-700"></i> View All Pakistan
             </button>
           </div>
 
-          <!-- Stylized Custom Graphic Map Vector Canvas -->
-          <div class="relative w-full h-[220px] flex items-center justify-center my-1">
-            <svg viewBox="0 0 500 400" class="w-full h-full drop-shadow-md">
-              <!-- Azad Kashmir -->
-              <path d="M 330 50 L 410 80 L 390 140 L 330 110 Z" fill="#F4A28C" stroke="#fff" stroke-width="2"/>
-              <!-- Gilgit Baltistan -->
-              <path d="M 310 20 L 410 20 L 410 80 L 330 50 Z" fill="#95D5B2" stroke="#fff" stroke-width="2"/>
-              <!-- Khyber Pakhtunkhwa -->
-              <path d="M 260 70 L 330 50 L 330 140 L 290 170 L 250 120 Z" fill="#8ECAE6" stroke="#fff" stroke-width="2"/>
-              <!-- Punjab -->
-              <path d="M 290 170 L 390 140 L 370 280 L 280 250 Z" fill="#C7E9C0" stroke="#fff" stroke-width="2"/>
-              <!-- Sindh -->
-              <path d="M 230 270 L 280 250 L 280 370 L 200 350 Z" fill="#FFCB69" stroke="#fff" stroke-width="2"/>
-              <!-- Balochistan -->
-              <path d="M 120 180 L 290 170 L 230 270 L 120 280 Z" fill="#FFE3A8" stroke="#fff" stroke-width="2"/>
+          <!-- The Real Map Container -->
+          <div id="leafletMap"></div>
 
-              <!-- Interactive City Markers -->
-              <g onclick="selectCityFilter('Lahore')" class="cursor-pointer hover:opacity-80">
-                <circle cx="340" cy="210" r="5" fill="#1B4332"/>
-                <text x="348" y="213" font-size="11" font-weight="bold" fill="#1B4332">Lahore</text>
-              </g>
-              <g onclick="selectCityFilter('Islamabad')" class="cursor-pointer hover:opacity-80">
-                <circle cx="330" cy="150" r="5" fill="#1B4332"/>
-                <text x="338" y="153" font-size="11" font-weight="bold" fill="#1B4332">Islamabad</text>
-              </g>
-              <g onclick="selectCityFilter('Karachi')" class="cursor-pointer hover:opacity-80">
-                <circle cx="230" cy="340" r="5" fill="#1B4332"/>
-                <text x="238" y="343" font-size="11" font-weight="bold" fill="#1B4332">Karachi</text>
-              </g>
-              <g onclick="selectCityFilter('Peshawar')" class="cursor-pointer hover:opacity-80">
-                <circle cx="280" cy="110" r="5" fill="#1B4332"/>
-                <text x="288" y="113" font-size="11" font-weight="bold" fill="#1B4332">Peshawar</text>
-              </g>
-              <g onclick="selectCityFilter('Quetta')" class="cursor-pointer hover:opacity-80">
-                <circle cx="200" cy="220" r="5" fill="#1B4332"/>
-                <text x="208" y="223" font-size="11" font-weight="bold" fill="#1B4332">Quetta</text>
-              </g>
-            </svg>
-          </div>
-
-          <!-- Map Footer Legend -->
-          <div class="flex items-center justify-between pt-1">
-            <span class="text-[9px] text-emerald-900 font-bold bg-white/80 px-2.5 py-1 rounded-full border border-emerald-200">
-              <i class="fa-solid fa-shield-check text-emerald-600 me-1"></i> 100% Verified Pakistani Profiles
-            </span>
-            <button onclick="resetCityFilter()" class="bg-white/95 text-emerald-800 text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm border border-slate-200">
-              View All Cities <i class="fa-solid fa-chevron-right text-[8px] ms-1"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- View 2: Detailed Graphic Zoomed City View (Lahore Graphic Layout) -->
-        <div id="cityZoomView" class="hidden bg-[#E1F2E8] rounded-3xl p-3 border border-emerald-200/80 shadow-sm relative overflow-hidden">
-          <div class="flex items-center justify-between mb-2">
-            <div class="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-xs font-extrabold text-slate-800 flex items-center gap-2">
-              <i class="fa-solid fa-location-dot text-emerald-700"></i> <span id="currentZoomCity">Lahore Zoom View</span>
-            </div>
-            <button onclick="switchMapMode('country')" class="bg-white/90 text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-1">
-              <i class="fa-solid fa-chevron-left text-[8px]"></i> Change City
-            </button>
-          </div>
-
-          <!-- Fictional Graphic Vector Canvas for City Zoom Details -->
-          <div class="relative w-full h-[210px] bg-[#EAF5EF] rounded-2xl border border-emerald-100 overflow-hidden flex items-center justify-center p-2">
-            <svg viewBox="0 0 400 250" class="w-full h-full">
-              <!-- Town Boundaries -->
-              <path d="M 40 40 Q 150 20 220 80 T 180 200 T 50 180 Z" fill="#D2EBD9" stroke="#A7D7B5" stroke-width="2" stroke-dasharray="4"/>
-              <path d="M 180 50 Q 320 40 360 120 T 260 220 T 170 150 Z" fill="#C3E6CC" stroke="#90CFA0" stroke-width="2" stroke-dasharray="4"/>
-
-              <!-- Town Labels -->
-              <text x="110" y="60" font-size="10" font-weight="bold" fill="#2D6A4F">Shalimar Town</text>
-              <text x="100" y="120" font-size="10" font-weight="bold" fill="#2D6A4F">Gulberg</text>
-              <text x="80" y="160" font-size="10" font-weight="bold" fill="#2D6A4F">Model Town</text>
-              <text x="130" y="195" font-size="10" font-weight="bold" fill="#2D6A4F">Johar Town</text>
-              <text x="240" y="210" font-size="10" font-weight="bold" fill="#2D6A4F">DHA</text>
-              <text x="220" y="100" font-size="14" font-weight="900" fill="#1B4332">Lahore Center</text>
-
-              <!-- Map Pins -->
-              <circle cx="200" cy="110" r="6" fill="#1B4332"/>
-              <circle cx="140" cy="100" r="5" fill="#2D6A4F"/>
-              <circle cx="110" cy="135" r="5" fill="#2D6A4F"/>
-              <circle cx="180" cy="170" r="5" fill="#2D6A4F"/>
-              <circle cx="225" cy="150" r="5" fill="#2D6A4F"/>
-              <circle cx="260" cy="185" r="5" fill="#2D6A4F"/>
-            </svg>
-
-            <div class="absolute bottom-2 right-2 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
-              <i class="fa-solid fa-location-dot text-emerald-700 text-xs"></i>
-              <span class="text-[10px] font-bold text-slate-700">Showing results for <strong class="text-emerald-800" id="zoomCityTag">Lahore</strong></span>
-            </div>
+          <!-- Floating Result Badge Overlay (Bottom Right) -->
+          <div class="absolute bottom-4 right-4 z-20 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-location-dot text-emerald-700 text-xs"></i>
+            <span class="text-[10px] font-bold text-slate-700">Showing results for <strong class="text-emerald-800" id="currentMapCityTag">All Pakistan</strong></span>
           </div>
         </div>
       </section>
 
-      <!-- Horizontal Filter Pills -->
-      <section class="px-4">
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-          <button onclick="setActiveFilter(this, 'All')" class="filter-pill bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap shadow-sm">All</button>
-          <button onclick="setActiveFilter(this, 'Educated')" class="filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition">Educated</button>
-          <button onclick="setActiveFilter(this, 'Professional')" class="filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition">Professional</button>
-          <button onclick="setActiveFilter(this, 'Family Values')" class="filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition">Family Values</button>
+      <!-- Quick City Selection Pills -->
+      <section class="px-3">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          <button onclick="zoomToCity('All')" class="city-pill bg-emerald-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-sm">All Cities</button>
+          <button onclick="zoomToCity('Lahore')" class="city-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition">Lahore</button>
+          <button onclick="zoomToCity('Karachi')" class="city-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition">Karachi</button>
+          <button onclick="zoomToCity('Islamabad')" class="city-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition">Islamabad</button>
+          <button onclick="zoomToCity('Peshawar')" class="city-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition">Peshawar</button>
+          <button onclick="zoomToCity('Quetta')" class="city-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition">Quetta</button>
+        </div>
+      </section>
+
+      <!-- Horizontal Preference Filter Pills -->
+      <section class="px-3">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+          <button onclick="setActiveCategory(this, 'All')" class="category-pill bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-xl whitespace-nowrap shadow-sm">All Matches</button>
+          <button onclick="setActiveCategory(this, 'Educated')" class="category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition">Educated</button>
+          <button onclick="setActiveCategory(this, 'Professional')" class="category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition">Professional</button>
+          <button onclick="setActiveCategory(this, 'Family Values')" class="category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition">Family Values</button>
         </div>
       </section>
 
       <!-- Proposal Cards Stream -->
-      <section class="px-4 space-y-4" id="cardsContainer">
-        <!-- Rendered dynamically -->
+      <section class="px-3 space-y-3" id="cardsContainer">
+        <!-- Cards rendered dynamically -->
       </section>
 
     </main>
 
-    <!-- Bottom Navigation Bar matching UI mockup -->
+    <!-- Bottom Navigation Bar -->
     <nav class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between absolute bottom-0 left-0 right-0 z-40">
-      <button onclick="switchTab('home')" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
+      <button onclick="zoomToPakistanOverview()" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
         <i class="fa-solid fa-house text-base"></i>
         <span class="text-[10px]">Home</span>
       </button>
-      <button onclick="switchTab('cities')" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
+      <button onclick="zoomToCity('Lahore')" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
         <i class="fa-solid fa-location-dot text-base"></i>
         <span class="text-[10px]">Cities</span>
       </button>
-      <button onclick="switchTab('about')" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
+      <button onclick="openModal('aboutModal')" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
         <i class="fa-circle-info fa-solid text-base"></i>
         <span class="text-[10px]">About</span>
       </button>
@@ -254,11 +199,11 @@
         <form onsubmit="handleCitySubscribe(event)" class="space-y-3 text-xs">
           <div>
             <label class="block font-semibold text-slate-600 mb-1">Your Email Address</label>
-            <input type="email" id="subEmail" required placeholder="name@gmail.com" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <input type="email" id="subEmail" required placeholder="name@gmail.com" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
           </div>
           <div>
             <label class="block font-semibold text-slate-600 mb-1">Target City (Any City in Pakistan)</label>
-            <input type="text" id="subCity" required placeholder="e.g. Lahore, Islamabad, Karachi" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <input type="text" id="subCity" required placeholder="e.g. Lahore, Islamabad, Karachi" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
           </div>
           <p id="subSuccess" class="text-xs text-emerald-700 font-bold hidden"><i class="fa-solid fa-circle-check me-1"></i> Subscribed! You will receive Gmail alerts for new proposals in this city.</p>
           <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition">Subscribe to Alerts</button>
@@ -286,7 +231,6 @@
           <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
 
-        <!-- Login Form -->
         <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-3 text-xs">
           <div>
             <label class="block font-semibold text-slate-600 mb-1">Admin Username</label>
@@ -300,7 +244,6 @@
           <button type="submit" class="w-full bg-emerald-800 text-white font-bold py-2.5 rounded-xl">Login as Admin</button>
         </form>
 
-        <!-- Admin Control Area (Visible after auth) -->
         <div id="adminControls" class="hidden space-y-3 pt-2">
           <p class="text-xs text-emerald-700 font-bold"><i class="fa-solid fa-circle-check me-1"></i> Admin Authenticated</p>
           <button onclick="openAddProposalModal()" class="w-full bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2">
@@ -366,7 +309,17 @@
   </div>
 
   <script>
-    // Initial Dataset matching UI screenshots exactly
+    // City Coordinates Database for Map Transitions
+    const cityCoordinates = {
+      'overview': { lat: 30.3753, lng: 69.3451, zoom: 5 },
+      'lahore': { lat: 31.5204, lng: 74.3587, zoom: 12 },
+      'karachi': { lat: 24.8607, lng: 67.0011, zoom: 11 },
+      'islamabad': { lat: 33.6844, lng: 73.0479, zoom: 12 },
+      'peshawar': { lat: 34.0151, lng: 71.5249, zoom: 12 },
+      'quetta': { lat: 30.1798, lng: 66.9750, zoom: 12 }
+    };
+
+    // Candidate Dataset
     const defaultProposals = [
       {
         id: "p1",
@@ -374,13 +327,13 @@
         age: "24 Years",
         height: "5'4\"",
         city: "Lahore",
+        lat: 31.5204,
+        lng: 74.3587,
         education: "Bachelors in Computer Science",
         profession: "Software Engineer",
-        maritalStatus: "Never Married",
         bio: "Simple, kind and family-oriented. Looking for a partner who values faith and growth.",
         tags: ["Educated", "Professional", "Family Values"],
         photos: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=80"],
-        photosCount: "1/5",
         email: "ayesha@gmail.com"
       },
       {
@@ -389,13 +342,13 @@
         age: "27 Years",
         height: "5'2\"",
         city: "Islamabad",
+        lat: 33.6844,
+        lng: 73.0479,
         education: "Masters in Business Administration",
         profession: "Marketing Specialist",
-        maritalStatus: "Never Married",
         bio: "Loves traveling, good food and meaningful conversations. Hoping to find a life partner.",
         tags: ["Ambitious", "Well Mannered", "Travel Lover"],
         photos: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80"],
-        photosCount: "1/4",
         email: "fatima@gmail.com"
       },
       {
@@ -404,13 +357,13 @@
         age: "26 Years",
         height: "5'3\"",
         city: "Karachi",
+        lat: 24.8607,
+        lng: 67.0011,
         education: "Bachelors in Medicine",
         profession: "Doctor",
-        maritalStatus: "Never Married",
         bio: "Faith, family and kindness are the most important things in my life.",
         tags: ["Caring", "Respectful", "Family Oriented"],
         photos: ["https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80"],
-        photosCount: "1/4",
         email: "sara@gmail.com"
       },
       {
@@ -419,18 +372,20 @@
         age: "23 Years",
         height: "5'1\"",
         city: "Peshawar",
+        lat: 34.0151,
+        lng: 71.5249,
         education: "Bachelors in Pharmacy",
         profession: "Pharmacist",
-        maritalStatus: "Never Married",
         bio: "Hardworking, positive and always believe in making a better tomorrow.",
         tags: ["Hardworking", "Positive", "Simple Life"],
         photos: ["https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop&q=80"],
-        photosCount: "1/4",
         email: "hira@gmail.com"
       }
     ];
 
-    // Local Storage State Management
+    // Local Storage State
+    let map;
+    let mapMarkers = [];
     let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || defaultProposals;
     let savedIds = JSON.parse(localStorage.getItem('rp_saved')) || [];
     let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
@@ -438,6 +393,96 @@
     let isAdmin = false;
     let activeCityFilter = 'All';
     let activeCategoryFilter = 'All';
+
+    // Initialize Map with Smooth Zoom Transition Support
+    function initLeafletMap() {
+      map = L.map('leafletMap', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([cityCoordinates.overview.lat, cityCoordinates.overview.lng], cityCoordinates.overview.zoom);
+
+      // OpenStreetMap Tiles with Custom Styling
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        minZoom: 4
+      }).addTo(map);
+
+      renderMapMarkers();
+    }
+
+    function renderMapMarkers() {
+      mapMarkers.forEach(m => map.removeLayer(m));
+      mapMarkers = [];
+
+      const customIcon = L.divIcon({
+        className: 'custom-map-pin',
+        html: `<div style="background-color: #1B4332; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [14, 14]
+      });
+
+      proposals.forEach(p => {
+        if (p.lat && p.lng) {
+          const marker = L.marker([p.lat, p.lng], { icon: customIcon }).addTo(map);
+          marker.bindPopup(`<strong style="font-size:11px;">${p.name}</strong><br><span style="font-size:10px;">${p.city}</span>`);
+          marker.on('click', () => {
+            viewCandidateDetails(p.id);
+          });
+          mapMarkers.push(marker);
+        }
+      });
+    }
+
+    // Smooth Flying/Zooming Transition to City
+    function zoomToCity(cityName) {
+      activeCityFilter = cityName;
+      
+      // Update Pills UI State
+      document.querySelectorAll('.city-pill').forEach(btn => {
+        if (btn.innerText.toLowerCase().includes(cityName.toLowerCase()) || (cityName === 'All' && btn.innerText.includes('All'))) {
+          btn.className = "city-pill bg-emerald-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-sm";
+        } else {
+          btn.className = "city-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition";
+        }
+      });
+
+      const key = cityName.toLowerCase();
+      if (key !== 'all' && cityCoordinates[key]) {
+        const target = cityCoordinates[key];
+        // Smooth zoom transition duration
+        map.flyTo([target.lat, target.lng], target.zoom, {
+          duration: 1.8,
+          easeLinearity: 0.25
+        });
+        document.getElementById('currentMapCityTag').innerText = cityName;
+      } else {
+        zoomToPakistanOverview();
+      }
+
+      renderCards();
+    }
+
+    function zoomToPakistanOverview() {
+      activeCityFilter = 'All';
+      map.flyTo([cityCoordinates.overview.lat, cityCoordinates.overview.lng], cityCoordinates.overview.zoom, {
+        duration: 1.8
+      });
+      document.getElementById('currentMapCityTag').innerText = "All Pakistan";
+      
+      document.querySelectorAll('.city-pill').forEach((btn, idx) => {
+        btn.className = idx === 0 ? "city-pill bg-emerald-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-sm" : "city-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition";
+      });
+
+      renderCards();
+    }
+
+    function filterMapSearch(val) {
+      if (!val) return;
+      const matchKey = Object.keys(cityCoordinates).find(k => k.includes(val.toLowerCase()));
+      if (matchKey && matchKey !== 'overview') {
+        const titleCase = matchKey.charAt(0).toUpperCase() + matchKey.slice(1);
+        zoomToCity(titleCase);
+      }
+    }
 
     function saveData() {
       localStorage.setItem('rp_proposals', JSON.stringify(proposals));
@@ -469,41 +514,15 @@
       document.getElementById(id).classList.remove('flex');
     }
 
-    // Map Mode Switcher
-    function switchMapMode(mode) {
-      if (mode === 'lahore') {
-        document.getElementById('countryMapView').classList.add('hidden');
-        document.getElementById('cityZoomView').classList.remove('hidden');
-      } else {
-        document.getElementById('cityZoomView').classList.add('hidden');
-        document.getElementById('countryMapView').classList.remove('hidden');
-      }
-    }
-
-    function selectCityFilter(city) {
-      activeCityFilter = city;
-      document.getElementById('zoomCityTag').textContent = city;
-      document.getElementById('currentZoomCity').textContent = city + " Zoom View";
-      switchMapMode('lahore');
-      renderCards();
-    }
-
-    function resetCityFilter() {
-      activeCityFilter = 'All';
-      switchMapMode('country');
-      renderCards();
-    }
-
-    function setActiveFilter(btn, category) {
-      document.querySelectorAll('.filter-pill').forEach(el => {
-        el.className = "filter-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition";
+    function setActiveCategory(btn, category) {
+      document.querySelectorAll('.category-pill').forEach(el => {
+        el.className = "category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition";
       });
-      btn.className = "filter-pill bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap shadow-sm";
+      btn.className = "category-pill bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-xl whitespace-nowrap shadow-sm";
       activeCategoryFilter = category;
       renderCards();
     }
 
-    // Toggle Saved Candidate
     function toggleSave(id) {
       if (savedIds.includes(id)) {
         savedIds = savedIds.filter(item => item !== id);
@@ -514,24 +533,21 @@
       renderCards();
     }
 
-    // View Details and trigger EmailJS
     function viewCandidateDetails(id) {
       const p = proposals.find(item => item.id === id);
       if (!p) return;
 
-      // History tracking
       if (!browsingHistory.some(h => h.id === p.id)) {
         browsingHistory.unshift({ ...p, viewedAt: new Date().toLocaleTimeString() });
         saveData();
       }
 
-      // EmailJS Notification Trigger
       if (p.email) {
         emailjs.send("YOUR_SERVICE_ID", "YOUR_VIEW_TEMPLATE_ID", {
           to_email: p.email,
           candidate_name: p.name,
           view_time: new Date().toLocaleString()
-        }).catch(err => console.log("Email dispatch failure:", err));
+        }).catch(err => console.log(err));
       }
 
       const body = document.getElementById('detailModalBody');
@@ -615,7 +631,6 @@
       }, 1800);
     }
 
-    // Admin Auth
     function handleAdminLogin(e) {
       e.preventDefault();
       const u = document.getElementById('adminUser').value;
@@ -649,19 +664,23 @@
     function saveProposal(e) {
       e.preventDefault();
       const editId = document.getElementById('editId').value;
+      const cName = document.getElementById('fieldCity').value;
+      const coordKey = cName.toLowerCase();
+      const fallbackCoord = cityCoordinates[coordKey] || cityCoordinates.overview;
+
       const newP = {
         id: editId || 'p_' + Date.now(),
         name: document.getElementById('fieldName').value,
         age: document.getElementById('fieldAge').value,
         height: document.getElementById('fieldHeight').value,
-        city: document.getElementById('fieldCity').value,
+        city: cName,
+        lat: fallbackCoord.lat,
+        lng: fallbackCoord.lng,
         education: document.getElementById('fieldEducation').value,
         profession: document.getElementById('fieldProfession').value,
-        maritalStatus: "Never Married",
         bio: document.getElementById('fieldBio').value,
         tags: ["Hand Picked", "Verified"],
         photos: [document.getElementById('fieldPhoto').value],
-        photosCount: "1/4",
         email: document.getElementById('fieldEmail').value
       };
 
@@ -670,7 +689,6 @@
         if (index !== -1) proposals[index] = newP;
       } else {
         proposals.unshift(newP);
-        // Dispatch alerts to matching subscribers
         const match = subscribers.filter(s => s.city === newP.city.toLowerCase());
         match.forEach(sub => {
           emailjs.send("YOUR_SERVICE_ID", "YOUR_ALERT_TEMPLATE_ID", {
@@ -682,6 +700,7 @@
       }
 
       saveData();
+      renderMapMarkers();
       closeModal('proposalFormModal');
       renderCards();
     }
@@ -705,11 +724,11 @@
       if (confirm('Delete this proposal?')) {
         proposals = proposals.filter(x => x.id !== id);
         saveData();
+        renderMapMarkers();
         renderCards();
       }
     }
 
-    // Render Cards 1-to-1 matching UI reference
     function renderCards() {
       const container = document.getElementById('cardsContainer');
       container.innerHTML = '';
@@ -721,7 +740,7 @@
       });
 
       if (list.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">No profiles found matching selected criteria.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">No profiles found matching selected city/filters.</p>`;
         return;
       }
 
@@ -731,18 +750,16 @@
         card.className = "bg-white rounded-3xl p-3.5 border border-slate-100 shadow-sm flex gap-3.5 relative overflow-hidden";
 
         card.innerHTML = `
-          <!-- Image Box -->
           <div class="relative w-28 h-36 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-100">
             <img src="${p.photos[0]}" class="w-full h-full object-cover">
             <span class="absolute top-2 left-2 bg-emerald-900/80 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
               <i class="fa-solid fa-check-circle text-[8px]"></i> Hand Picked
             </span>
             <span class="absolute bottom-2 left-2 bg-slate-900/60 backdrop-blur-md text-white text-[9px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-              <i class="fa-regular fa-image text-[8px]"></i> ${p.photosCount || '1/4'}
+              <i class="fa-regular fa-image text-[8px]"></i> 1/4
             </span>
           </div>
 
-          <!-- Card Content Body -->
           <div class="flex-grow flex flex-col justify-between py-0.5">
             <div>
               <div class="flex items-start justify-between">
@@ -752,7 +769,6 @@
                 </button>
               </div>
 
-              <!-- Metadata Info list -->
               <div class="mt-1 space-y-1 text-slate-500 text-[11px] font-medium">
                 <p class="text-slate-700 font-bold">${p.age} &bull; ${p.height} &bull; <span class="text-emerald-800">${p.city}</span></p>
                 <p class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-graduation-cap text-slate-400 w-3"></i> ${p.education}</p>
@@ -762,12 +778,10 @@
               <p class="text-[11px] text-slate-500 leading-snug mt-2 line-clamp-2">${p.bio}</p>
             </div>
 
-            <!-- Tags Row -->
             <div class="flex flex-wrap items-center gap-1.5 mt-2">
               ${p.tags.map(t => `<span class="bg-emerald-50 text-emerald-800 text-[9px] font-bold px-2.5 py-1 rounded-lg">${t}</span>`).join('')}
             </div>
 
-            <!-- Admin Actions Bar -->
             ${isAdmin ? `
               <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
                 <button onclick="editProposal('${p.id}')" class="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-lg">Edit</button>
@@ -785,15 +799,8 @@
       });
     }
 
-    function switchTab(tab) {
-      if (tab === 'home') {
-        resetCityFilter();
-      } else if (tab === 'cities') {
-        switchMapMode('country');
-      }
-    }
-
     window.onload = () => {
+      initLeafletMap();
       saveData();
       renderCards();
     };
