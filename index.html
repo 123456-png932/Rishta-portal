@@ -22,7 +22,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
     (function(){
-      emailjs.init("YOUR_PUBLIC_KEY");
+      // Initialized with your EmailJS Public Key
+      emailjs.init("aACAqlnWlWDvJoVZU");
     })();
   </script>
   <!-- Firebase Compatibility SDKs (v8) for Real-time Cloud Sync -->
@@ -125,13 +126,13 @@
             </div>
           </div>
 
-          <!-- Top Right Map Controls (Including Prominent Top Cross Close Button) -->
+          <!-- Top Right Map Controls -->
           <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
             <button onclick="zoomToPakistanOverview()" class="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-1.5 hover:bg-slate-50 transition">
               <i class="fa-solid fa-globe text-emerald-700"></i> All Pakistan
             </button>
 
-            <!-- Close (Cross) Button for Fullscreen / Map Mode -->
+            <!-- Close (Cross) Button for Fullscreen Map Mode -->
             <button id="exitFullscreenMapBtn" onclick="closeFullscreenMap()" class="hidden bg-slate-900/90 hover:bg-slate-900 text-white w-8 h-8 rounded-full shadow-lg items-center justify-center transition backdrop-blur-md">
               <i class="fa-solid fa-xmark text-sm"></i>
             </button>
@@ -174,7 +175,7 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar (Phone Layout Only: Locks when opening app, disappears immediately on scroll, reappears at the top) -->
+    <!-- Bottom Navigation Bar -->
     <nav id="bottomNav" class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 transform translate-y-0 opacity-100">
       <button onclick="closeFullscreenMap(); zoomToPakistanOverview(); scrollToTop();" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
         <i class="fa-solid fa-house text-base"></i>
@@ -210,7 +211,7 @@
       </div>
     </div>
 
-    <!-- Modal: About Process (Updated Info & Top Cross Close Button) -->
+    <!-- Modal: About Process -->
     <div id="aboutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar relative">
         <div class="flex justify-between items-center border-b pb-2.5">
@@ -271,7 +272,7 @@
       </div>
     </div>
 
-    <!-- Modal: Subscribe Alerts -->
+    <!-- Modal: Subscribe Alerts (Connected to EmailJS) -->
     <div id="subscribeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
         <div class="flex justify-between items-center border-b pb-2.5">
@@ -287,13 +288,14 @@
             <label class="block font-semibold text-slate-600 mb-1">Target City</label>
             <input type="text" id="subCity" required placeholder="e.g. Multan, Rawalpindi" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
           </div>
-          <p id="subSuccess" class="text-xs text-emerald-700 font-bold hidden"><i class="fa-solid fa-circle-check me-1"></i> Subscribed!</p>
-          <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition">Subscribe</button>
+          <p id="subSuccess" class="text-xs text-emerald-700 font-bold hidden"><i class="fa-solid fa-circle-check me-1"></i> Subscribed Successfully!</p>
+          <p id="subError" class="text-xs text-rose-600 font-bold hidden"><i class="fa-solid fa-circle-exclamation me-1"></i> Subscription failed. Try again.</p>
+          <button id="subSubmitBtn" type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition">Subscribe</button>
         </form>
       </div>
     </div>
 
-    <!-- Modal: Admin Login & Panel (Credentials: Naseem / XXXNASEEXXXRISHTAXXX2000XXX) -->
+    <!-- Modal: Admin Login & Panel -->
     <div id="loginModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
         <div class="flex justify-between items-center border-b pb-2">
@@ -464,7 +466,6 @@
       'kotli': { lat: 33.5184, lng: 73.9022, zoom: 12 }
     };
 
-    // ZERO DEFAULT PROPOSALS: Starts completely clean and syncs with cloud/local database
     let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || [];
     let savedProfiles = JSON.parse(localStorage.getItem('rp_saved')) || [];
     let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
@@ -784,7 +785,6 @@
       }
     }
 
-    // ADMIN CREDENTIALS AUTHENTICATION (Username: Naseem, Password: XXXNASEEXXXRISHTAXXX2000XXX)
     function handleAdminLogin(e) {
       e.preventDefault();
       const enteredUser = document.getElementById('adminUser').value;
@@ -895,13 +895,36 @@
       closeModal('proposalFormModal');
     }
 
+    // HANDLES EMAILJS ALERT SUBSCRIPTION WITH YOUR CREDENTIALS
     function handleCitySubscribe(e) {
       e.preventDefault();
-      document.getElementById('subSuccess').classList.remove('hidden');
-      setTimeout(() => {
-        closeModal('subscribeModal');
-        document.getElementById('subSuccess').classList.add('hidden');
-      }, 2000);
+      
+      const submitBtn = document.getElementById('subSubmitBtn');
+      const emailVal = document.getElementById('subEmail').value;
+      const cityVal = document.getElementById('subCity').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Subscribing...";
+
+      // Service ID: service_yzk2m6f, Template ID: template_i9nwegh
+      emailjs.send("service_yzk2m6f", "template_i9nwegh", {
+        email: emailVal,
+        city: cityVal
+      }).then(function(response) {
+        document.getElementById('subSuccess').classList.remove('hidden');
+        document.getElementById('subError').classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Subscribe";
+        setTimeout(() => {
+          closeModal('subscribeModal');
+          document.getElementById('subSuccess').classList.add('hidden');
+        }, 2000);
+      }, function(error) {
+        console.error('EmailJS Error:', error);
+        document.getElementById('subError').classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Subscribe";
+      });
     }
 
     function scrollToTop() {
@@ -911,8 +934,6 @@
       }
     }
 
-    // PHONE APP LAYOUT ONLY: Scroll behavior listener for Bottom Navigation
-    // Bottom nav stays locked upon opening, hides as soon as scrolling starts, reappears ONLY at top (scrollTop === 0)
     function initScrollNavListener() {
       const mainScroll = document.getElementById('mainScrollArea');
       const bottomNav = document.getElementById('bottomNav');
