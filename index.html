@@ -408,16 +408,16 @@
   </div>
 
   <script>
-    // --- FIREBASE REAL-TIME CLOUD DATABASE CONFIGURATION ---
-    // Replace with your Firebase project keys from https://console.firebase.google.com
+    // --- EXACT FIREBASE REAL-TIME CLOUD DATABASE CONFIGURATION ---
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBTDGpkFur9meJjk72LNXFr1CC_xiYEU3Q",
+      authDomain: "rishtaportal-b9eac.firebaseapp.com",
+      databaseURL: "https://rishtaportal-b9eac-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "rishtaportal-b9eac",
+      storageBucket: "rishtaportal-b9eac.firebasestorage.app",
+      messagingSenderId: "993752158483",
+      appId: "1:993752158483:web:f44899225cf0d7acb40ae6",
+      measurementId: "G-MJP7ZXKJLX"
     };
 
     let db = null;
@@ -425,13 +425,13 @@
 
     // Initialize Firebase
     try {
-      if (!firebase.apps.length && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+      if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
         proposalsRef = db.ref('proposals');
       }
     } catch(e) {
-      console.warn("Firebase not configured. Running in standalone local mode.", e);
+      console.warn("Firebase execution context error.", e);
     }
 
     const cityCoordinates = {
