@@ -31,6 +31,12 @@
       z-index: 10;
       transition: all 0.3s ease-in-out;
     }
+    #pickerMap {
+      width: 100%;
+      height: 180px;
+      border-radius: 1rem;
+      z-index: 10;
+    }
     .fullscreen-map {
       position: fixed !important;
       top: 0 !important;
@@ -85,7 +91,7 @@
         </button>
         <div class="border-t border-slate-100 my-1"></div>
         <button id="adminMenuBtn" onclick="openModal('loginModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-emerald-800 font-bold flex items-center gap-2">
-          <i class="fa-solid fa-shield-halved"></i> Admin Portal Login
+          <i class="fa-solid fa-shield-halved"></i> Admin Portal Access
         </button>
       </div>
     </header>
@@ -331,6 +337,10 @@
           <button onclick="closeModal('proposalFormModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <form onsubmit="saveProposal(event)" class="space-y-2.5 text-xs">
+          <input type="hidden" id="editingProposalId" value="">
+          <input type="hidden" id="fieldLat" value="">
+          <input type="hidden" id="fieldLng" value="">
+
           <div>
             <label class="block font-semibold text-slate-600 mb-1">Full Name</label>
             <input type="text" id="fieldName" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
@@ -355,6 +365,19 @@
               <input type="text" id="fieldSociety" required placeholder="e.g. DHA Phase 6, F-7/2" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
             </div>
           </div>
+
+          <!-- Location Pinpointer Section -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex justify-between items-center">
+              <label class="block font-semibold text-slate-700">Pinpoint Exact Location on Map</label>
+              <button type="button" onclick="locateSocietyOnPicker()" class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 hover:bg-emerald-100">
+                <i class="fa-solid fa-magnifying-glass-location"></i> Search Pin
+              </button>
+            </div>
+            <p class="text-[9px] text-slate-400">Click map or drag the pin to set precise society position.</p>
+            <div id="pickerMap" class="border border-slate-200"></div>
+          </div>
+
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-semibold text-slate-600 mb-1">Education</label>
@@ -387,9 +410,15 @@
             <label class="block font-semibold text-slate-600 mb-1">Description / Requirements</label>
             <textarea id="fieldBio" rows="2" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50"></textarea>
           </div>
-          <button id="saveProposalSubmitBtn" type="submit" class="w-full bg-emerald-800 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2">
-            Save & Release Proposal
-          </button>
+          
+          <div id="adminFormActionButtons" class="flex gap-2 pt-2">
+            <button id="saveProposalSubmitBtn" type="submit" class="flex-grow bg-emerald-800 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2">
+              Save & Release Proposal
+            </button>
+            <button type="button" id="deleteFormBtn" onclick="deleteCurrentProposalFromForm()" class="hidden bg-rose-600 text-white font-bold px-4 py-2.5 rounded-xl hover:bg-rose-700 transition">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -397,7 +426,7 @@
   </div>
 
   <script>
-    // Coordinate Engine
+    // Coordinate Engine Default Centers
     const cityCoordinates = {
       'overview': { lat: 30.3753, lng: 69.3451, zoom: 5 },
       'islamabad': { lat: 33.6844, lng: 73.0479, zoom: 12 },
@@ -412,7 +441,7 @@
       'sialkot': { lat: 32.4945, lng: 74.5229, zoom: 12 }
     };
 
-    // Default Seed Proposals
+    // Default Seed Proposals with exact pinpoints
     const defaultProposals = [
       {
         id: "p1",
@@ -421,6 +450,8 @@
         height: "5'4\"",
         city: "Lahore",
         society: "DHA Phase 6",
+        lat: 31.4697,
+        lng: 74.4373,
         education: "M.Sc Computer Science",
         profession: "Software Engineer",
         category: "Professional",
@@ -435,6 +466,8 @@
         height: "5'11\"",
         city: "Islamabad",
         society: "F-7/2",
+        lat: 33.7215,
+        lng: 73.0565,
         education: "BBA Finance",
         profession: "Investment Banker",
         category: "Educated",
@@ -449,6 +482,8 @@
         height: "5'5\"",
         city: "Karachi",
         society: "Gulshan-e-Iqbal Block 13D",
+        lat: 24.9204,
+        lng: 67.0893,
         education: "MBBS",
         profession: "Doctor",
         category: "Family Values",
@@ -465,6 +500,9 @@
     
     let map = null;
     let markersGroup = null;
+    let pickerMap = null;
+    let pickerMarker = null;
+
     let currentCityFilter = "All";
     let currentCategoryFilter = "All";
     let currentKeywordSearch = "";
@@ -485,7 +523,7 @@
       }
     }
 
-    // Leaflet Initialization
+    // Leaflet Main Map Initialization
     function initMap() {
       const overview = cityCoordinates['overview'];
       map = L.map('leafletMap', { zoomControl: false }).setView([overview.lat, overview.lng], overview.zoom);
@@ -499,15 +537,83 @@
       renderMapMarkers();
     }
 
+    // Leaflet Admin Location Pinpicker Map Initialization
+    function initPickerMap() {
+      if (pickerMap) return;
+      const defaultCoord = cityCoordinates['lahore'];
+      pickerMap = L.map('pickerMap', { zoomControl: false }).setView([defaultCoord.lat, defaultCoord.lng], 12);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: ''
+      }).addTo(pickerMap);
+
+      pickerMarker = L.marker([defaultCoord.lat, defaultCoord.lng], { draggable: true }).addTo(pickerMap);
+
+      pickerMarker.on('dragend', function(e) {
+        const coord = pickerMarker.getLatLng();
+        document.getElementById('fieldLat').value = coord.lat;
+        document.getElementById('fieldLng').value = coord.lng;
+      });
+
+      pickerMap.on('click', function(e) {
+        pickerMarker.setLatLng(e.latlng);
+        document.getElementById('fieldLat').value = e.latlng.lat;
+        document.getElementById('fieldLng').value = e.latlng.lng;
+      });
+    }
+
+    function setPickerLocation(lat, lng, zoom = 14) {
+      if (!pickerMap) initPickerMap();
+      pickerMap.setView([lat, lng], zoom);
+      pickerMarker.setLatLng([lat, lng]);
+      document.getElementById('fieldLat').value = lat;
+      document.getElementById('fieldLng').value = lng;
+    }
+
+    async function locateSocietyOnPicker() {
+      const city = document.getElementById('fieldCity').value.trim();
+      const society = document.getElementById('fieldSociety').value.trim();
+      const query = `${society} ${city} Pakistan`.trim();
+
+      if (!query) return;
+
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          setPickerLocation(lat, lng, 14);
+        } else if (city) {
+          const resCity = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city + ' Pakistan')}`);
+          const dataCity = await resCity.json();
+          if (dataCity && dataCity.length > 0) {
+            setPickerLocation(parseFloat(dataCity[0].lat), parseFloat(dataCity[0].lon), 12);
+          }
+        }
+      } catch (e) {
+        console.error("Geocoding failed for picker", e);
+      }
+    }
+
     function renderMapMarkers() {
       if (!map || !markersGroup) return;
       markersGroup.clearLayers();
 
       proposals.forEach(p => {
-        const cityKey = p.city.toLowerCase().trim();
-        const coord = cityCoordinates[cityKey] || cityCoordinates['overview'];
-        
-        const marker = L.marker([coord.lat + (Math.random() - 0.5) * 0.04, coord.lng + (Math.random() - 0.5) * 0.04]);
+        let lat = p.lat;
+        let lng = p.lng;
+
+        // Fallback if missing specific lat/lng
+        if (!lat || !lng) {
+          const cityKey = p.city.toLowerCase().trim();
+          const coord = cityCoordinates[cityKey] || cityCoordinates['overview'];
+          lat = coord.lat + (Math.random() - 0.5) * 0.04;
+          lng = coord.lng + (Math.random() - 0.5) * 0.04;
+        }
+
+        const marker = L.marker([lat, lng]);
         marker.bindPopup(`
           <div style="font-family: 'Plus Jakarta Sans', sans-serif;" class="text-xs p-1">
             <strong class="text-emerald-800 text-sm block">${p.name}</strong>
@@ -560,7 +666,6 @@
       renderCityPills();
     }
 
-    // Nominatim Geocoding Integration
     async function handleCitySearch(val) {
       if (!val) return;
       const cityKey = val.toLowerCase().trim();
@@ -652,7 +757,7 @@
         const waMessage = encodeURIComponent(`Salam, I found the profile of ${p.name} (${p.city}) on Rishta Portal and would like to connect.`);
 
         return `
-          <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition space-y-3">
+          <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition space-y-3 relative">
             <div class="flex gap-3">
               <img src="${p.photo}" alt="${p.name}" class="w-20 h-20 rounded-2xl object-cover shadow-sm">
               <div class="flex-grow space-y-1">
@@ -681,6 +786,14 @@
               <span class="bg-emerald-50 text-emerald-700 text-[9px] font-extrabold px-2.5 py-1 rounded-lg truncate">${p.education}</span>
               
               <div class="flex items-center gap-1.5">
+                ${isAdmin ? `
+                  <button onclick="openEditProposalModal('${p.id}')" class="bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold text-[10px] px-2.5 py-1.5 rounded-xl transition">
+                    <i class="fa-solid fa-pen"></i> Edit
+                  </button>
+                  <button onclick="deleteProposal('${p.id}')" class="bg-rose-100 text-rose-700 hover:bg-rose-200 font-bold text-[10px] px-2.5 py-1.5 rounded-xl transition">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                ` : ''}
                 <a href="https://wa.me/${waNum}?text=${waMessage}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-xl transition flex items-center gap-1">
                   <i class="fa-brands fa-whatsapp text-xs"></i> Contact
                 </a>
@@ -774,6 +887,11 @@
           <p><strong>Category:</strong> ${item.category}</p>
           <p class="pt-1 text-slate-500 italic border-t border-slate-200">"${item.bio}"</p>
         </div>
+        ${isAdmin ? `
+          <button onclick="closeModal('detailModal'); deleteProposal('${item.id}');" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-xl text-center text-xs block">
+            <i class="fa-solid fa-trash me-1"></i> Delete Profile as Admin
+          </button>
+        ` : ''}
         <a href="https://wa.me/${waNum}?text=${waMessage}" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-center text-xs block flex items-center justify-center gap-1.5">
           <i class="fa-brands fa-whatsapp text-sm"></i> Connect via WhatsApp
         </a>
@@ -816,6 +934,7 @@
         document.getElementById('adminLoginForm').classList.add('hidden');
         document.getElementById('adminControls').classList.remove('hidden');
         document.getElementById('loginError').classList.add('hidden');
+        renderCards();
       } else {
         document.getElementById('loginError').classList.remove('hidden');
       }
@@ -826,12 +945,15 @@
       document.getElementById('adminLoginForm').classList.remove('hidden');
       document.getElementById('adminControls').classList.add('hidden');
       closeModal('loginModal');
+      renderCards();
     }
 
     function openAddProposalModal() {
       closeModal('loginModal');
       document.getElementById('formTitle').innerText = "Add Proposal";
-      
+      document.getElementById('editingProposalId').value = "";
+      document.getElementById('deleteFormBtn').classList.add('hidden');
+
       document.getElementById('fieldName').value = "";
       document.getElementById('fieldAge').value = "";
       document.getElementById('fieldHeight').value = "";
@@ -844,9 +966,72 @@
       document.getElementById('fieldBio').value = "";
 
       openModal('proposalFormModal');
+      setTimeout(() => {
+        initPickerMap();
+        pickerMap.invalidateSize();
+        setPickerLocation(cityCoordinates['lahore'].lat, cityCoordinates['lahore'].lng, 12);
+      }, 300);
     }
 
-    // Canvas Image Compression Handler
+    function openEditProposalModal(id) {
+      const item = proposals.find(p => p.id === id);
+      if (!item) return;
+
+      document.getElementById('formTitle').innerText = "Edit Proposal";
+      document.getElementById('editingProposalId').value = item.id;
+      document.getElementById('deleteFormBtn').classList.remove('hidden');
+
+      document.getElementById('fieldName').value = item.name;
+      document.getElementById('fieldAge').value = item.age;
+      document.getElementById('fieldHeight').value = item.height;
+      document.getElementById('fieldCity').value = item.city;
+      document.getElementById('fieldSociety').value = item.society;
+      document.getElementById('fieldEducation').value = item.education;
+      document.getElementById('fieldProfession').value = item.profession;
+      document.getElementById('fieldCategory').value = item.category || 'Professional';
+      document.getElementById('fieldWhatsapp').value = item.whatsapp || '';
+      document.getElementById('fieldBio').value = item.bio;
+
+      openModal('proposalFormModal');
+      setTimeout(() => {
+        initPickerMap();
+        pickerMap.invalidateSize();
+        if (item.lat && item.lng) {
+          setPickerLocation(item.lat, item.lng, 14);
+        } else {
+          locateSocietyOnPicker();
+        }
+      }, 300);
+    }
+
+    // Admin Proposal Deletion Logic
+    function deleteProposal(id) {
+      if (!isAdmin) return;
+      if (confirm("Are you sure you want to permanently delete this proposal?")) {
+        proposals = proposals.filter(p => p.id !== id);
+        savedProfiles = savedProfiles.filter(p => p.id !== id);
+        browsingHistory = browsingHistory.filter(p => p.id !== id);
+
+        localStorage.setItem('rp_proposals', JSON.stringify(proposals));
+        localStorage.setItem('rp_saved', JSON.stringify(savedProfiles));
+        localStorage.setItem('rp_history', JSON.stringify(browsingHistory));
+
+        updateBadges();
+        renderMapMarkers();
+        renderCityPills();
+        renderCards();
+      }
+    }
+
+    function deleteCurrentProposalFromForm() {
+      const id = document.getElementById('editingProposalId').value;
+      if (id) {
+        deleteProposal(id);
+        closeModal('proposalFormModal');
+      }
+    }
+
+    // Image Compression Helper
     function compressAndGetImageData(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -889,6 +1074,7 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Optimizing & Saving...`;
       btn.disabled = true;
 
+      const editId = document.getElementById('editingProposalId').value;
       const name = document.getElementById('fieldName').value;
       const age = document.getElementById('fieldAge').value;
       const height = document.getElementById('fieldHeight').value;
@@ -899,9 +1085,24 @@
       const category = document.getElementById('fieldCategory').value;
       const whatsapp = document.getElementById('fieldWhatsapp').value || "923000000000";
       const bio = document.getElementById('fieldBio').value;
-      const fileInput = document.getElementById('fieldPhotoFile');
 
+      let lat = parseFloat(document.getElementById('fieldLat').value);
+      let lng = parseFloat(document.getElementById('fieldLng').value);
+
+      if (!lat || !lng) {
+        const cityKey = city.toLowerCase().trim();
+        const fallback = cityCoordinates[cityKey] || cityCoordinates['overview'];
+        lat = fallback.lat;
+        lng = fallback.lng;
+      }
+
+      const fileInput = document.getElementById('fieldPhotoFile');
       let photoUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400";
+
+      if (editId) {
+        const existing = proposals.find(p => p.id === editId);
+        if (existing) photoUrl = existing.photo;
+      }
 
       if (fileInput.files && fileInput.files[0]) {
         try {
@@ -911,13 +1112,20 @@
         }
       }
 
-      const newProposal = {
-        id: "p_" + Date.now(),
-        name, age, height, city, society, education, profession, category, whatsapp, bio,
-        photo: photoUrl
-      };
+      if (editId) {
+        const idx = proposals.findIndex(p => p.id === editId);
+        if (idx > -1) {
+          proposals[idx] = { id: editId, name, age, height, city, society, lat, lng, education, profession, category, whatsapp, bio, photo: photoUrl };
+        }
+      } else {
+        const newProposal = {
+          id: "p_" + Date.now(),
+          name, age, height, city, society, lat, lng, education, profession, category, whatsapp, bio,
+          photo: photoUrl
+        };
+        proposals.unshift(newProposal);
+      }
 
-      proposals.unshift(newProposal);
       localStorage.setItem('rp_proposals', JSON.stringify(proposals));
 
       btn.innerHTML = `Save & Release Proposal`;
