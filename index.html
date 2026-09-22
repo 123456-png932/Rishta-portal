@@ -110,7 +110,7 @@
     </header>
 
     <!-- Main Content Area -->
-    <main class="flex-grow overflow-y-auto no-scrollbar space-y-3 pb-20">
+    <main id="mainScrollArea" class="flex-grow overflow-y-auto no-scrollbar space-y-3 pb-20">
 
       <!-- Interactive Map Section -->
       <section class="p-3 pb-1" id="mapSection">
@@ -125,12 +125,15 @@
             </div>
           </div>
 
-          <div class="absolute top-4 right-4 z-20 flex gap-2">
-            <button id="exitFullscreenMapBtn" onclick="closeFullscreenMap()" class="hidden bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md items-center gap-1.5 hover:bg-rose-700 transition">
-              <i class="fa-solid fa-compress"></i> Exit Map
-            </button>
+          <!-- Top Right Controls (Includes Cross Button for Exiting Map) -->
+          <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
             <button onclick="zoomToPakistanOverview()" class="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-1.5 hover:bg-slate-50 transition">
               <i class="fa-solid fa-globe text-emerald-700"></i> All Pakistan
+            </button>
+
+            <!-- Cross Button to Exit Map View -->
+            <button id="exitFullscreenMapBtn" onclick="closeFullscreenMap()" class="hidden bg-slate-900/90 hover:bg-slate-900 text-white w-8 h-8 rounded-full shadow-lg items-center justify-center transition backdrop-blur-md">
+              <i class="fa-solid fa-xmark text-sm"></i>
             </button>
           </div>
 
@@ -171,8 +174,8 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between absolute bottom-0 left-0 right-0 z-40">
+    <!-- Bottom Navigation Bar (Auto hides on scroll, reappears at top) -->
+    <nav id="bottomNav" class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 transform translate-y-0 opacity-100">
       <button onclick="closeFullscreenMap(); zoomToPakistanOverview()" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
         <i class="fa-solid fa-house text-base"></i>
         <span class="text-[10px]">Home</span>
@@ -207,21 +210,33 @@
       </div>
     </div>
 
-    <!-- Modal: About Process -->
+    <!-- Modal: Updated About Process -->
     <div id="aboutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar">
         <div class="flex justify-between items-center border-b pb-2.5">
-          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-circle-info text-emerald-600"></i> How Rishta Portal Works</h3>
+          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-circle-info text-emerald-600"></i> Our Process</h3>
           <button onclick="closeModal('aboutModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <div class="space-y-3 text-xs text-slate-600">
           <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
-            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">01 — Verified Sourcing</h4>
-            <p>Profiles are reviewed through local network checks before being listed.</p>
+            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">01 — We Source</h4>
+            <p>Our team identifies genuine marriage proposals through our personal network and trusted sources.</p>
           </div>
           <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
-            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">02 — Direct Family Contact</h4>
-            <p>Connect directly with family representatives without middleman fees.</p>
+            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">02 — We Review</h4>
+            <p>We review the information available to us and assess the proposal before considering it for the platform.</p>
+          </div>
+          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
+            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">03 — We Confirm</h4>
+            <p>We make reasonable efforts to confirm the key information provided to us. However, information can change or may not always be independently verifiable.</p>
+          </div>
+          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
+            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">04 — We Represent</h4>
+            <p>Selected proposals are professionally presented on Rishta Portal for families and individuals to consider.</p>
+          </div>
+          <div class="bg-amber-50 p-3.5 rounded-2xl border border-amber-200 text-amber-900 space-y-1">
+            <h4 class="font-extrabold text-amber-800 text-xs flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Important</h4>
+            <p class="text-[11px] leading-relaxed">Rishta Portal does not guarantee that every piece of information in a profile is complete, current, or accurate. Users and families should conduct their own independent verification before making any personal, financial, or marriage-related decision.</p>
           </div>
         </div>
         <button onclick="closeModal('aboutModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
@@ -408,7 +423,7 @@
   </div>
 
   <script>
-    // --- EXACT FIREBASE REAL-TIME CLOUD DATABASE CONFIGURATION ---
+    // --- FIREBASE REAL-TIME CLOUD DATABASE CONFIGURATION ---
     const firebaseConfig = {
       apiKey: "AIzaSyBTDGpkFur9meJjk72LNXFr1CC_xiYEU3Q",
       authDomain: "rishtaportal-b9eac.firebaseapp.com",
@@ -423,7 +438,6 @@
     let db = null;
     let proposalsRef = null;
 
-    // Initialize Firebase
     try {
       if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -495,7 +509,6 @@
     let currentCategoryFilter = "All";
     let currentKeywordSearch = "";
 
-    // REALTIME CLOUD SYNC LISTENERS
     function initRealtimeSync() {
       if (!proposalsRef) return;
 
@@ -633,18 +646,21 @@
       document.getElementById('dropdownMenu').classList.toggle('hidden');
     }
 
+    // MAP FULLSCREEN AND CLOSE CONTROLS
     function openFullscreenMap() {
       const mapEl = document.getElementById('leafletMap');
-      document.getElementById('exitFullscreenMapBtn').classList.remove('hidden');
-      document.getElementById('exitFullscreenMapBtn').classList.add('flex');
+      const exitBtn = document.getElementById('exitFullscreenMapBtn');
+      exitBtn.classList.remove('hidden');
+      exitBtn.classList.add('flex');
       mapEl.classList.add('fullscreen-map');
       setTimeout(() => map.invalidateSize(), 300);
     }
 
     function closeFullscreenMap() {
       const mapEl = document.getElementById('leafletMap');
-      document.getElementById('exitFullscreenMapBtn').classList.add('hidden');
-      document.getElementById('exitFullscreenMapBtn').classList.remove('flex');
+      const exitBtn = document.getElementById('exitFullscreenMapBtn');
+      exitBtn.classList.add('hidden');
+      exitBtn.classList.remove('flex');
       mapEl.classList.remove('fullscreen-map');
       setTimeout(() => map.invalidateSize(), 300);
     }
@@ -659,6 +675,12 @@
     }
 
     function zoomToCity(cityName) {
+      if (cityName === "All") {
+        zoomToPakistanOverview();
+        return;
+      }
+
+      openFullscreenMap();
       const cityKey = cityName.toLowerCase().trim();
       const target = cityCoordinates[cityKey] || cityCoordinates['overview'];
       map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
@@ -787,9 +809,13 @@
       }
     }
 
+    // UPDATED ADMIN CREDENTIALS CHECK
     function handleAdminLogin(e) {
       e.preventDefault();
-      if (document.getElementById('adminUser').value === "admin" && document.getElementById('adminPass').value === "admin123") {
+      const enteredUser = document.getElementById('adminUser').value;
+      const enteredPass = document.getElementById('adminPass').value;
+
+      if (enteredUser === "Naseem" && enteredPass === "XXXNASEEXXXRISHTAXXX2000XXX") {
         isAdmin = true;
         sessionStorage.setItem('rp_admin_logged', 'true');
         checkAdminState();
@@ -887,7 +913,7 @@
         photo: document.getElementById('fieldPhoto').value || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
         bio: document.getElementById('fieldBio').value,
         lat: parseFloat(document.getElementById('fieldLat').value) || 31.5204,
-        lng: parseFloat(document.getElementById('fieldLng').value) || 74.3587
+        lng: parseFloat(document.getElementById('fieldLng').value) || 31.5204
       };
 
       syncSaveProposalToCloud(newProposal);
@@ -903,6 +929,22 @@
       }, 2000);
     }
 
+    // SCROLL LISTENER FOR HIDING/SHOWING BOTTOM NAVIGATION
+    function initScrollNavListener() {
+      const mainScroll = document.getElementById('mainScrollArea');
+      const bottomNav = document.getElementById('bottomNav');
+
+      mainScroll.addEventListener('scroll', () => {
+        if (mainScroll.scrollTop > 10) {
+          bottomNav.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+          bottomNav.classList.remove('translate-y-0', 'opacity-100');
+        } else {
+          bottomNav.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+          bottomNav.classList.add('translate-y-0', 'opacity-100');
+        }
+      });
+    }
+
     window.onload = function() {
       checkAdminState();
       initMap();
@@ -910,6 +952,7 @@
       renderCards();
       document.getElementById('savedBadge').innerText = savedProfiles.length;
       initRealtimeSync();
+      initScrollNavListener();
     };
   </script>
 </body>
