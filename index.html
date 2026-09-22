@@ -441,7 +441,7 @@
       'sialkot': { lat: 32.4945, lng: 74.5229, zoom: 12 }
     };
 
-    // Default Seed Proposals with exact pinpoints
+    // Initial Seed Proposals
     const defaultProposals = [
       {
         id: "p1",
@@ -493,10 +493,37 @@
       }
     ];
 
-    // State Variables with localStorage Integration
-    let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || defaultProposals;
+    // Local Storage Read Helper (Fixes Reset Bug)
+    function loadStoredProposals() {
+      try {
+        const stored = localStorage.getItem('rp_proposals');
+        if (stored !== null) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.error("Error reading stored proposals:", e);
+      }
+      // Seed initial defaults if localStorage is empty
+      localStorage.setItem('rp_proposals', JSON.stringify(defaultProposals));
+      return defaultProposals;
+    }
+
+    // Local Storage Write Helper
+    function saveStoredProposals(data) {
+      try {
+        localStorage.setItem('rp_proposals', JSON.stringify(data));
+      } catch (e) {
+        console.error("Storage Error: Local storage quota exceeded.", e);
+        alert("Warning: Local storage limit reached. Please reduce image sizes.");
+      }
+    }
+
+    // State Variables
+    let proposals = loadStoredProposals();
     let savedProfiles = JSON.parse(localStorage.getItem('rp_saved')) || [];
     let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
+    let isAdmin = sessionStorage.getItem('rp_admin_logged') === 'true';
     
     let map = null;
     let markersGroup = null;
@@ -506,7 +533,6 @@
     let currentCityFilter = "All";
     let currentCategoryFilter = "All";
     let currentKeywordSearch = "";
-    let isAdmin = false;
 
     // Password Eye Toggle
     function togglePasswordVisibility() {
@@ -605,7 +631,6 @@
         let lat = p.lat;
         let lng = p.lng;
 
-        // Fallback if missing specific lat/lng
         if (!lat || !lng) {
           const cityKey = p.city.toLowerCase().trim();
           const coord = cityCoordinates[cityKey] || cityCoordinates['overview'];
@@ -923,7 +948,17 @@
       renderHistoryList();
     }
 
-    // Admin Authentication
+    // Admin Authentication with Session Persistence
+    function checkAdminState() {
+      if (isAdmin) {
+        document.getElementById('adminLoginForm').classList.add('hidden');
+        document.getElementById('adminControls').classList.remove('hidden');
+      } else {
+        document.getElementById('adminLoginForm').classList.remove('hidden');
+        document.getElementById('adminControls').classList.add('hidden');
+      }
+    }
+
     function handleAdminLogin(e) {
       e.preventDefault();
       const user = document.getElementById('adminUser').value;
@@ -931,8 +966,8 @@
 
       if (user === "admin" && pass === "admin123") {
         isAdmin = true;
-        document.getElementById('adminLoginForm').classList.add('hidden');
-        document.getElementById('adminControls').classList.remove('hidden');
+        sessionStorage.setItem('rp_admin_logged', 'true');
+        checkAdminState();
         document.getElementById('loginError').classList.add('hidden');
         renderCards();
       } else {
@@ -942,8 +977,8 @@
 
     function handleAdminLogout() {
       isAdmin = false;
-      document.getElementById('adminLoginForm').classList.remove('hidden');
-      document.getElementById('adminControls').classList.add('hidden');
+      sessionStorage.removeItem('rp_admin_logged');
+      checkAdminState();
       closeModal('loginModal');
       renderCards();
     }
@@ -1004,7 +1039,7 @@
       }, 300);
     }
 
-    // Admin Proposal Deletion Logic
+    // Admin Proposal Deletion Logic (Guaranteed LocalStorage Sync)
     function deleteProposal(id) {
       if (!isAdmin) return;
       if (confirm("Are you sure you want to permanently delete this proposal?")) {
@@ -1012,7 +1047,7 @@
         savedProfiles = savedProfiles.filter(p => p.id !== id);
         browsingHistory = browsingHistory.filter(p => p.id !== id);
 
-        localStorage.setItem('rp_proposals', JSON.stringify(proposals));
+        saveStoredProposals(proposals);
         localStorage.setItem('rp_saved', JSON.stringify(savedProfiles));
         localStorage.setItem('rp_history', JSON.stringify(browsingHistory));
 
@@ -1031,7 +1066,7 @@
       }
     }
 
-    // Image Compression Helper
+    // High-Ratio Image Compression Helper to Prevent LocalStorage Quota Crashes
     function compressAndGetImageData(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1041,7 +1076,7 @@
           img.src = event.target.result;
           img.onload = function() {
             const canvas = document.createElement('canvas');
-            const maxDim = 500;
+            const maxDim = 320; // Compressed to fit safely inside browser localStorage
             let width = img.width;
             let height = img.height;
 
@@ -1061,10 +1096,11 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
           };
           img.onerror = error => reject(error);
         };
+        reader.onerror = error => reject(error);
       });
     }
 
@@ -1074,67 +1110,72 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Optimizing & Saving...`;
       btn.disabled = true;
 
-      const editId = document.getElementById('editingProposalId').value;
-      const name = document.getElementById('fieldName').value;
-      const age = document.getElementById('fieldAge').value;
-      const height = document.getElementById('fieldHeight').value;
-      const city = document.getElementById('fieldCity').value;
-      const society = document.getElementById('fieldSociety').value;
-      const education = document.getElementById('fieldEducation').value;
-      const profession = document.getElementById('fieldProfession').value;
-      const category = document.getElementById('fieldCategory').value;
-      const whatsapp = document.getElementById('fieldWhatsapp').value || "923000000000";
-      const bio = document.getElementById('fieldBio').value;
+      try {
+        const editId = document.getElementById('editingProposalId').value;
+        const name = document.getElementById('fieldName').value;
+        const age = document.getElementById('fieldAge').value;
+        const height = document.getElementById('fieldHeight').value;
+        const city = document.getElementById('fieldCity').value;
+        const society = document.getElementById('fieldSociety').value;
+        const education = document.getElementById('fieldEducation').value;
+        const profession = document.getElementById('fieldProfession').value;
+        const category = document.getElementById('fieldCategory').value;
+        const whatsapp = document.getElementById('fieldWhatsapp').value || "923000000000";
+        const bio = document.getElementById('fieldBio').value;
 
-      let lat = parseFloat(document.getElementById('fieldLat').value);
-      let lng = parseFloat(document.getElementById('fieldLng').value);
+        let lat = parseFloat(document.getElementById('fieldLat').value);
+        let lng = parseFloat(document.getElementById('fieldLng').value);
 
-      if (!lat || !lng) {
-        const cityKey = city.toLowerCase().trim();
-        const fallback = cityCoordinates[cityKey] || cityCoordinates['overview'];
-        lat = fallback.lat;
-        lng = fallback.lng;
-      }
-
-      const fileInput = document.getElementById('fieldPhotoFile');
-      let photoUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400";
-
-      if (editId) {
-        const existing = proposals.find(p => p.id === editId);
-        if (existing) photoUrl = existing.photo;
-      }
-
-      if (fileInput.files && fileInput.files[0]) {
-        try {
-          photoUrl = await compressAndGetImageData(fileInput.files[0]);
-        } catch (err) {
-          console.error("Compression error", err);
+        if (!lat || !lng) {
+          const cityKey = city.toLowerCase().trim();
+          const fallback = cityCoordinates[cityKey] || cityCoordinates['overview'];
+          lat = fallback.lat;
+          lng = fallback.lng;
         }
-      }
 
-      if (editId) {
-        const idx = proposals.findIndex(p => p.id === editId);
-        if (idx > -1) {
-          proposals[idx] = { id: editId, name, age, height, city, society, lat, lng, education, profession, category, whatsapp, bio, photo: photoUrl };
+        const fileInput = document.getElementById('fieldPhotoFile');
+        let photoUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400";
+
+        if (editId) {
+          const existing = proposals.find(p => p.id === editId);
+          if (existing) photoUrl = existing.photo;
         }
-      } else {
-        const newProposal = {
-          id: "p_" + Date.now(),
-          name, age, height, city, society, lat, lng, education, profession, category, whatsapp, bio,
-          photo: photoUrl
-        };
-        proposals.unshift(newProposal);
+
+        if (fileInput.files && fileInput.files[0]) {
+          try {
+            photoUrl = await compressAndGetImageData(fileInput.files[0]);
+          } catch (err) {
+            console.error("Compression error", err);
+          }
+        }
+
+        if (editId) {
+          const idx = proposals.findIndex(p => p.id === editId);
+          if (idx > -1) {
+            proposals[idx] = { id: editId, name, age, height, city, society, lat, lng, education, profession, category, whatsapp, bio, photo: photoUrl };
+          }
+        } else {
+          const newProposal = {
+            id: "p_" + Date.now(),
+            name, age, height, city, society, lat, lng, education, profession, category, whatsapp, bio,
+            photo: photoUrl
+          };
+          proposals.unshift(newProposal);
+        }
+
+        saveStoredProposals(proposals);
+
+        renderMapMarkers();
+        renderCityPills();
+        renderCards();
+        closeModal('proposalFormModal');
+      } catch (err) {
+        console.error("Error saving proposal:", err);
+        alert("Failed to save proposal. Please check browser permissions.");
+      } finally {
+        btn.innerHTML = `Save & Release Proposal`;
+        btn.disabled = false;
       }
-
-      localStorage.setItem('rp_proposals', JSON.stringify(proposals));
-
-      btn.innerHTML = `Save & Release Proposal`;
-      btn.disabled = false;
-
-      renderMapMarkers();
-      renderCityPills();
-      renderCards();
-      closeModal('proposalFormModal');
     }
 
     function handleCitySubscribe(e) {
@@ -1147,6 +1188,7 @@
     }
 
     window.onload = function() {
+      checkAdminState();
       initMap();
       updateBadges();
       renderCityPills();
