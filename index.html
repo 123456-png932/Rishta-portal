@@ -210,7 +210,7 @@
       </div>
     </div>
 
-    <!-- Modal: Updated About Process -->
+    <!-- Modal: About Process -->
     <div id="aboutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar">
         <div class="flex justify-between items-center border-b pb-2.5">
@@ -460,42 +460,7 @@
       'multan': { lat: 30.1575, lng: 71.5249, zoom: 12 }
     };
 
-    const defaultProposals = [
-      {
-        id: "p1",
-        name: "Ayesha Malik",
-        age: "24 Years",
-        height: "5'4\"",
-        city: "Lahore",
-        society: "DHA Phase 6",
-        lat: 31.4697,
-        lng: 74.4373,
-        education: "M.Sc Computer Science",
-        profession: "Software Engineer",
-        category: "Professional",
-        whatsapp: "923001234567",
-        photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
-        bio: "Seeking a well-educated partner with strong family values."
-      },
-      {
-        id: "p2",
-        name: "Hamza Rehman",
-        age: "28 Years",
-        height: "5'11\"",
-        city: "Islamabad",
-        society: "F-7/2",
-        lat: 33.7215,
-        lng: 73.0565,
-        education: "BBA Finance",
-        profession: "Investment Banker",
-        category: "Educated",
-        whatsapp: "923001234568",
-        photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
-        bio: "Looking for an understanding and educated match from a respected family."
-      }
-    ];
-
-    let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || defaultProposals;
+    let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || [];
     let savedProfiles = JSON.parse(localStorage.getItem('rp_saved')) || [];
     let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
     let isAdmin = sessionStorage.getItem('rp_admin_logged') === 'true';
@@ -517,8 +482,7 @@
         if (data) {
           proposals = Object.values(data);
         } else {
-          defaultProposals.forEach(p => proposalsRef.child(p.id).set(p));
-          proposals = defaultProposals;
+          proposals = [];
         }
         localStorage.setItem('rp_proposals', JSON.stringify(proposals));
         renderMapMarkers();
@@ -646,7 +610,6 @@
       document.getElementById('dropdownMenu').classList.toggle('hidden');
     }
 
-    // MAP FULLSCREEN AND CLOSE CONTROLS
     function openFullscreenMap() {
       const mapEl = document.getElementById('leafletMap');
       const exitBtn = document.getElementById('exitFullscreenMapBtn');
@@ -809,7 +772,6 @@
       }
     }
 
-    // UPDATED ADMIN CREDENTIALS CHECK
     function handleAdminLogin(e) {
       e.preventDefault();
       const enteredUser = document.getElementById('adminUser').value;
@@ -929,7 +891,6 @@
       }, 2000);
     }
 
-    // SCROLL LISTENER FOR HIDING/SHOWING BOTTOM NAVIGATION
     function initScrollNavListener() {
       const mainScroll = document.getElementById('mainScrollArea');
       const bottomNav = document.getElementById('bottomNav');
