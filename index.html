@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Leaflet CSS & JS for Real Maps with Smooth Transitions -->
+  <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- EmailJS Integration -->
@@ -122,7 +122,8 @@
           <div id="leafletMap"></div>
 
           <div class="absolute bottom-4 right-4 z-20 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-2">
-            <i class="fa-solid fa-location-dot text-emerald-700 text-xs"></i>
+            <i id="mapSearchSpinner" class="fa-solid fa-spinner fa-spin text-emerald-700 text-xs hidden"></i>
+            <i id="mapLocIcon" class="fa-solid fa-location-dot text-emerald-700 text-xs"></i>
             <span class="text-[10px] font-bold text-slate-700">Showing results for <strong class="text-emerald-800" id="currentMapCityTag">All Pakistan</strong></span>
           </div>
         </div>
@@ -130,8 +131,14 @@
 
       <!-- Scrollable City & Society Selector -->
       <section class="px-3">
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1" id="cityPillContainer">
-          <!-- Dynamically populated -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1" id="cityPillContainer"></div>
+      </section>
+
+      <!-- Keyword Search Bar -->
+      <section class="px-3">
+        <div class="relative">
+          <input type="text" id="keywordSearch" oninput="handleKeywordSearch(this.value)" placeholder="Search by profession, education, or keyword..." class="w-full bg-white border border-slate-200 text-xs rounded-2xl pl-9 pr-4 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
         </div>
       </section>
 
@@ -175,8 +182,14 @@
           <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-user-nurse text-emerald-600"></i> Rishtas Aunty</h3>
           <button onclick="closeModal('rishtasAuntyModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
-        <div class="py-8 text-center text-slate-400 text-xs italic">
-          <!-- Content to be added later -->
+        <div class="py-6 text-center space-y-2">
+          <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+            <i class="fa-solid fa-comments"></i>
+          </div>
+          <p class="text-xs text-slate-600 font-medium">Get personalized marriage matchmaking assistance directly on WhatsApp.</p>
+          <a href="https://wa.me/923000000000?text=Salam%20Rishta%20Aunty,%20I%20need%20assistance%20finding%20a%20match." target="_blank" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-md transition">
+            <i class="fa-brands fa-whatsapp me-1.5 text-sm"></i> Chat with Rishta Aunty
+          </a>
         </div>
         <button onclick="closeModal('rishtasAuntyModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
       </div>
@@ -195,25 +208,17 @@
             <h4 class="font-extrabold text-emerald-800 text-sm mb-1">01 — We Source</h4>
             <p>Our team identifies genuine marriage proposals through our personal network and trusted sources.</p>
           </div>
-
           <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
             <h4 class="font-extrabold text-emerald-800 text-sm mb-1">02 — We Review</h4>
             <p>We review the information available to us and assess the proposal before considering it for the platform.</p>
           </div>
-
           <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
             <h4 class="font-extrabold text-emerald-800 text-sm mb-1">03 — We Confirm</h4>
-            <p>We make reasonable efforts to confirm the key information provided to us. However, information can change or may not always be independently verifiable.</p>
+            <p>We make reasonable efforts to confirm key information provided to us.</p>
           </div>
-
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
-            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">04 — We Represent</h4>
-            <p>Selected proposals are professionally presented on Rishta Portal for families and individuals to consider.</p>
-          </div>
-
           <div class="bg-amber-50 p-3.5 rounded-2xl border border-amber-200">
             <h4 class="font-bold text-amber-800 text-xs mb-1 flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Important</h4>
-            <p class="text-[11px] text-amber-900 leading-relaxed">Rishta Portal does not guarantee that every piece of information in a profile is complete, current, or accurate. Users and families should conduct their own independent verification before making any personal, financial, or marriage-related decision.</p>
+            <p class="text-[11px] text-amber-900 leading-relaxed">Rishta Portal does not guarantee that every piece of information is complete. Families should conduct independent verification.</p>
           </div>
         </div>
 
@@ -221,6 +226,7 @@
       </div>
     </div>
 
+    <!-- Saved Modal -->
     <div id="savedModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col">
         <div class="flex justify-between items-center border-b pb-2.5">
@@ -232,6 +238,7 @@
       </div>
     </div>
 
+    <!-- History Modal -->
     <div id="historyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col">
         <div class="flex justify-between items-center border-b pb-2.5">
@@ -246,6 +253,7 @@
       </div>
     </div>
 
+    <!-- Subscribe Modal -->
     <div id="subscribeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
         <div class="flex justify-between items-center border-b pb-2.5">
@@ -261,12 +269,13 @@
             <label class="block font-semibold text-slate-600 mb-1">Target City (Any City in Pakistan)</label>
             <input type="text" id="subCity" required placeholder="e.g. Multan, Abbottabad, Faisalabad" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
           </div>
-          <p id="subSuccess" class="text-xs text-emerald-700 font-bold hidden"><i class="fa-solid fa-circle-check me-1"></i> Subscribed! You will receive Gmail alerts for new proposals in this city.</p>
+          <p id="subSuccess" class="text-xs text-emerald-700 font-bold hidden"><i class="fa-solid fa-circle-check me-1"></i> Subscribed! You will receive email alerts for new proposals in this city.</p>
           <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition">Subscribe to Alerts</button>
         </form>
       </div>
     </div>
 
+    <!-- Candidate Detail Modal -->
     <div id="detailModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
         <div class="flex justify-between items-center border-b pb-2">
@@ -278,7 +287,7 @@
       </div>
     </div>
 
-    <!-- Login Modal with Password Toggle -->
+    <!-- Login Modal -->
     <div id="loginModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
         <div class="flex justify-between items-center border-b pb-2">
@@ -301,4 +310,640 @@
             </div>
           </div>
           <p id="loginError" class="text-xs text-rose-600 hidden font-bold">Invalid Admin Credentials.</p>
-          <button t
+          <button type="submit" class="w-full bg-emerald-800 text-white font-bold py-2.5 rounded-xl">Login as Admin</button>
+        </form>
+
+        <div id="adminControls" class="hidden space-y-3 pt-2">
+          <p class="text-xs text-emerald-700 font-bold"><i class="fa-solid fa-circle-check me-1"></i> Admin Authenticated</p>
+          <button onclick="openAddProposalModal()" class="w-full bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i> Release New Proposal
+          </button>
+          <button onclick="handleAdminLogout()" class="w-full bg-rose-100 text-rose-700 font-bold py-2 rounded-xl text-xs">Logout Admin</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Proposal Add/Edit Form Modal -->
+    <div id="proposalFormModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto no-scrollbar">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 id="formTitle" class="text-base font-extrabold text-slate-900">Add Proposal</h3>
+          <button onclick="closeModal('proposalFormModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form onsubmit="saveProposal(event)" class="space-y-2.5 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Full Name</label>
+            <input type="text" id="fieldName" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Age</label>
+              <input type="text" id="fieldAge" required placeholder="24 Years" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Height</label>
+              <input type="text" id="fieldHeight" required placeholder="5'4&quot;" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">City</label>
+              <input type="text" id="fieldCity" required placeholder="e.g. Lahore, Multan" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Society / Area</label>
+              <input type="text" id="fieldSociety" required placeholder="e.g. DHA Phase 6, F-7/2" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Education</label>
+              <input type="text" id="fieldEducation" required placeholder="B.Sc CS" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Profession</label>
+              <input type="text" id="fieldProfession" required placeholder="Software Engineer" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Category</label>
+              <select id="fieldCategory" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+                <option value="Professional">Professional</option>
+                <option value="Educated">Educated</option>
+                <option value="Family Values">Family Values</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">WhatsApp Number</label>
+              <input type="text" id="fieldWhatsapp" placeholder="923001234567" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Select Image (Compressed on Upload)</label>
+            <input type="file" id="fieldPhotoFile" accept="image/*" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50 text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Description / Requirements</label>
+            <textarea id="fieldBio" rows="2" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50"></textarea>
+          </div>
+          <button id="saveProposalSubmitBtn" type="submit" class="w-full bg-emerald-800 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2">
+            Save & Release Proposal
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Coordinate Engine
+    const cityCoordinates = {
+      'overview': { lat: 30.3753, lng: 69.3451, zoom: 5 },
+      'islamabad': { lat: 33.6844, lng: 73.0479, zoom: 12 },
+      'rawalpindi': { lat: 33.5651, lng: 73.0169, zoom: 12 },
+      'lahore': { lat: 31.5204, lng: 74.3587, zoom: 12 },
+      'karachi': { lat: 24.8607, lng: 67.0011, zoom: 11 },
+      'peshawar': { lat: 34.0151, lng: 71.5249, zoom: 12 },
+      'quetta': { lat: 30.1798, lng: 66.9750, zoom: 12 },
+      'faisalabad': { lat: 31.4504, lng: 73.1350, zoom: 12 },
+      'multan': { lat: 30.1575, lng: 71.5249, zoom: 12 },
+      'gujranwala': { lat: 32.1877, lng: 74.1945, zoom: 12 },
+      'sialkot': { lat: 32.4945, lng: 74.5229, zoom: 12 }
+    };
+
+    // Default Seed Proposals
+    const defaultProposals = [
+      {
+        id: "p1",
+        name: "Ayesha Malik",
+        age: "24 Years",
+        height: "5'4\"",
+        city: "Lahore",
+        society: "DHA Phase 6",
+        education: "M.Sc Computer Science",
+        profession: "Software Engineer",
+        category: "Professional",
+        whatsapp: "923001234567",
+        photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
+        bio: "Seeking a well-educated partner with strong family values and professional integrity."
+      },
+      {
+        id: "p2",
+        name: "Hamza Rehman",
+        age: "28 Years",
+        height: "5'11\"",
+        city: "Islamabad",
+        society: "F-7/2",
+        education: "BBA Finance",
+        profession: "Investment Banker",
+        category: "Educated",
+        whatsapp: "923001234568",
+        photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+        bio: "Looking for an understanding and educated match from a respected family."
+      },
+      {
+        id: "p3",
+        name: "Zainab Khan",
+        age: "26 Years",
+        height: "5'5\"",
+        city: "Karachi",
+        society: "Gulshan-e-Iqbal Block 13D",
+        education: "MBBS",
+        profession: "Doctor",
+        category: "Family Values",
+        whatsapp: "923001234569",
+        photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400",
+        bio: "Caring, family-oriented medical professional seeking a compatible life partner."
+      }
+    ];
+
+    // State Variables with localStorage Integration
+    let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || defaultProposals;
+    let savedProfiles = JSON.parse(localStorage.getItem('rp_saved')) || [];
+    let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
+    
+    let map = null;
+    let markersGroup = null;
+    let currentCityFilter = "All";
+    let currentCategoryFilter = "All";
+    let currentKeywordSearch = "";
+    let isAdmin = false;
+
+    // Password Eye Toggle
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('adminPass');
+      const icon = document.getElementById('passwordToggleIcon');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    // Leaflet Initialization
+    function initMap() {
+      const overview = cityCoordinates['overview'];
+      map = L.map('leafletMap', { zoomControl: false }).setView([overview.lat, overview.lng], overview.zoom);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: ''
+      }).addTo(map);
+
+      markersGroup = L.layerGroup().addTo(map);
+      renderMapMarkers();
+    }
+
+    function renderMapMarkers() {
+      if (!map || !markersGroup) return;
+      markersGroup.clearLayers();
+
+      proposals.forEach(p => {
+        const cityKey = p.city.toLowerCase().trim();
+        const coord = cityCoordinates[cityKey] || cityCoordinates['overview'];
+        
+        const marker = L.marker([coord.lat + (Math.random() - 0.5) * 0.04, coord.lng + (Math.random() - 0.5) * 0.04]);
+        marker.bindPopup(`
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif;" class="text-xs p-1">
+            <strong class="text-emerald-800 text-sm block">${p.name}</strong>
+            <span class="text-slate-500">${p.city} (${p.society})</span><br/>
+            <span class="font-semibold text-slate-700">${p.profession}</span>
+          </div>
+        `);
+        markersGroup.addLayer(marker);
+      });
+    }
+
+    function toggleMenu() {
+      document.getElementById('dropdownMenu').classList.toggle('hidden');
+    }
+
+    function openFullscreenMap() {
+      const mapEl = document.getElementById('leafletMap');
+      const exitBtn = document.getElementById('exitFullscreenMapBtn');
+      mapEl.classList.add('fullscreen-map');
+      exitBtn.classList.remove('hidden');
+      exitBtn.classList.add('flex');
+      setTimeout(() => { map.invalidateSize(); }, 300);
+    }
+
+    function closeFullscreenMap() {
+      const mapEl = document.getElementById('leafletMap');
+      const exitBtn = document.getElementById('exitFullscreenMapBtn');
+      mapEl.classList.remove('fullscreen-map');
+      exitBtn.classList.add('hidden');
+      exitBtn.classList.remove('flex');
+      setTimeout(() => { map.invalidateSize(); }, 300);
+    }
+
+    function zoomToPakistanOverview() {
+      const target = cityCoordinates['overview'];
+      map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.5 });
+      currentCityFilter = "All";
+      document.getElementById('currentMapCityTag').innerText = "All Pakistan";
+      renderCards();
+      renderCityPills();
+    }
+
+    function zoomToCity(cityName) {
+      const cityKey = cityName.toLowerCase().trim();
+      const target = cityCoordinates[cityKey] || cityCoordinates['overview'];
+      map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
+      currentCityFilter = cityName;
+      document.getElementById('currentMapCityTag').innerText = cityName;
+      renderCards();
+      renderCityPills();
+    }
+
+    // Nominatim Geocoding Integration
+    async function handleCitySearch(val) {
+      if (!val) return;
+      const cityKey = val.toLowerCase().trim();
+      
+      if (cityCoordinates[cityKey]) {
+        zoomToCity(val);
+      } else {
+        const spinner = document.getElementById('mapSearchSpinner');
+        const icon = document.getElementById('mapLocIcon');
+        spinner.classList.remove('hidden');
+        icon.classList.add('hidden');
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val + ', Pakistan')}`);
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            map.flyTo([lat, lon], 12, { duration: 1.2 });
+            currentCityFilter = val;
+            document.getElementById('currentMapCityTag').innerText = val;
+            renderCards();
+          }
+        } catch (err) {
+          console.error("Geocoding failed:", err);
+        } finally {
+          spinner.classList.add('hidden');
+          icon.classList.remove('hidden');
+        }
+      }
+    }
+
+    function handleKeywordSearch(query) {
+      currentKeywordSearch = query.toLowerCase().trim();
+      renderCards();
+    }
+
+    function renderCityPills() {
+      const container = document.getElementById('cityPillContainer');
+      const cities = ["All", ...new Set(proposals.map(p => p.city))];
+
+      container.innerHTML = cities.map(city => {
+        const isActive = currentCityFilter.toLowerCase() === city.toLowerCase();
+        const bgClass = isActive ? "bg-emerald-800 text-white shadow-sm" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50";
+        return `<button onclick="zoomToCity('${city}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${bgClass}">${city}</button>`;
+      }).join('');
+    }
+
+    function setActiveCategory(btn, category) {
+      document.querySelectorAll('.category-pill').forEach(b => {
+        b.className = "category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition";
+      });
+      btn.className = "category-pill bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-xl whitespace-nowrap shadow-sm";
+      currentCategoryFilter = category;
+      renderCards();
+    }
+
+    function renderCards() {
+      const container = document.getElementById('cardsContainer');
+      let filtered = proposals.filter(p => {
+        const cityMatch = currentCityFilter === "All" || p.city.toLowerCase() === currentCityFilter.toLowerCase();
+        const catMatch = currentCategoryFilter === "All" || p.category === currentCategoryFilter;
+        
+        const kw = currentKeywordSearch;
+        const kwMatch = !kw || 
+          p.name.toLowerCase().includes(kw) ||
+          p.profession.toLowerCase().includes(kw) ||
+          p.education.toLowerCase().includes(kw) ||
+          p.city.toLowerCase().includes(kw) ||
+          p.society.toLowerCase().includes(kw);
+
+        return cityMatch && catMatch && kwMatch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 bg-white rounded-3xl border border-slate-100 p-6">
+            <i class="fa-solid fa-folder-open text-3xl text-slate-300 mb-2"></i>
+            <p class="text-xs font-bold text-slate-600">No proposals found</p>
+            <p class="text-[10px] text-slate-400">Try adjusting your search criteria</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => {
+        const isSaved = savedProfiles.some(sp => sp.id === p.id);
+        const waNum = p.whatsapp || "923000000000";
+        const waMessage = encodeURIComponent(`Salam, I found the profile of ${p.name} (${p.city}) on Rishta Portal and would like to connect.`);
+
+        return `
+          <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition space-y-3">
+            <div class="flex gap-3">
+              <img src="${p.photo}" alt="${p.name}" class="w-20 h-20 rounded-2xl object-cover shadow-sm">
+              <div class="flex-grow space-y-1">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <h3 class="font-extrabold text-slate-900 text-sm leading-tight">${p.name}</h3>
+                    <p class="text-[11px] text-emerald-800 font-bold flex items-center gap-1">
+                      <i class="fa-solid fa-location-dot text-[10px]"></i> ${p.city}
+                      <span class="text-slate-400 font-normal">(${p.society})</span>
+                    </p>
+                  </div>
+                  <button onclick="toggleSave('${p.id}')" class="text-base transition ${isSaved ? 'text-emerald-600' : 'text-slate-300 hover:text-slate-400'}">
+                    <i class="${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
+                  </button>
+                </div>
+                <div class="flex items-center gap-2 text-[10px] text-slate-500 font-medium">
+                  <span>${p.age}</span> • <span>${p.height}</span>
+                </div>
+                <p class="text-[11px] font-semibold text-slate-700 leading-tight">${p.profession}</p>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 line-clamp-2 italic bg-slate-50 p-2 rounded-xl">"${p.bio}"</p>
+
+            <div class="flex items-center justify-between pt-1 border-t border-slate-50 gap-2">
+              <span class="bg-emerald-50 text-emerald-700 text-[9px] font-extrabold px-2.5 py-1 rounded-lg truncate">${p.education}</span>
+              
+              <div class="flex items-center gap-1.5">
+                <a href="https://wa.me/${waNum}?text=${waMessage}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-xl transition flex items-center gap-1">
+                  <i class="fa-brands fa-whatsapp text-xs"></i> Contact
+                </a>
+                <button onclick="viewDetails('${p.id}')" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] px-3 py-1.5 rounded-xl transition">
+                  Details
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById(id).classList.add('flex');
+      if (id === 'savedModal') renderSavedList();
+      if (id === 'historyModal') renderHistoryList();
+      document.getElementById('dropdownMenu').classList.add('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).classList.remove('flex');
+    }
+
+    function toggleSave(id) {
+      const idx = savedProfiles.findIndex(sp => sp.id === id);
+      if (idx > -1) {
+        savedProfiles.splice(idx, 1);
+      } else {
+        const item = proposals.find(p => p.id === id);
+        if (item) savedProfiles.push(item);
+      }
+      localStorage.setItem('rp_saved', JSON.stringify(savedProfiles));
+      updateBadges();
+      renderCards();
+    }
+
+    function updateBadges() {
+      document.getElementById('savedBadge').innerText = savedProfiles.length;
+      document.getElementById('historyBadge').innerText = browsingHistory.length;
+    }
+
+    function renderSavedList() {
+      const container = document.getElementById('savedListContainer');
+      if (savedProfiles.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">No saved profiles yet.</p>`;
+        return;
+      }
+      container.innerHTML = savedProfiles.map(p => `
+        <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-2xl border border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <img src="${p.photo}" class="w-10 h-10 rounded-xl object-cover">
+            <div>
+              <h4 class="text-xs font-bold text-slate-900">${p.name}</h4>
+              <p class="text-[10px] text-slate-500">${p.city} (${p.society})</p>
+            </div>
+          </div>
+          <button onclick="toggleSave('${p.id}'); renderSavedList();" class="text-rose-500 text-xs hover:text-rose-700">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function viewDetails(id) {
+      const item = proposals.find(p => p.id === id);
+      if (!item) return;
+
+      if (!browsingHistory.some(h => h.id === item.id)) {
+        browsingHistory.unshift(item);
+        localStorage.setItem('rp_history', JSON.stringify(browsingHistory));
+        updateBadges();
+      }
+
+      const waNum = item.whatsapp || "923000000000";
+      const waMessage = encodeURIComponent(`Salam, I found the profile of ${item.name} (${item.city}) on Rishta Portal and would like to discuss further.`);
+
+      const body = document.getElementById('detailModalBody');
+      body.innerHTML = `
+        <div class="text-center space-y-2">
+          <img src="${item.photo}" class="w-24 h-24 rounded-3xl object-cover mx-auto shadow-md">
+          <h3 class="text-base font-extrabold text-slate-900">${item.name}</h3>
+          <p class="text-xs text-emerald-800 font-bold">${item.city} — ${item.society}</p>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-2xl space-y-1.5 text-[11px] text-slate-600">
+          <p><strong>Age / Height:</strong> ${item.age} / ${item.height}</p>
+          <p><strong>Education:</strong> ${item.education}</p>
+          <p><strong>Profession:</strong> ${item.profession}</p>
+          <p><strong>Category:</strong> ${item.category}</p>
+          <p class="pt-1 text-slate-500 italic border-t border-slate-200">"${item.bio}"</p>
+        </div>
+        <a href="https://wa.me/${waNum}?text=${waMessage}" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-center text-xs block flex items-center justify-center gap-1.5">
+          <i class="fa-brands fa-whatsapp text-sm"></i> Connect via WhatsApp
+        </a>
+      `;
+      openModal('detailModal');
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      if (browsingHistory.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">No history records.</p>`;
+        return;
+      }
+      container.innerHTML = browsingHistory.map(p => `
+        <div class="flex items-center gap-2.5 p-2 bg-slate-50 rounded-xl">
+          <img src="${p.photo}" class="w-8 h-8 rounded-lg object-cover">
+          <div>
+            <h4 class="text-xs font-bold text-slate-800">${p.name}</h4>
+            <p class="text-[9px] text-slate-400">${p.city} (${p.society})</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function clearHistory() {
+      browsingHistory = [];
+      localStorage.removeItem('rp_history');
+      updateBadges();
+      renderHistoryList();
+    }
+
+    // Admin Authentication
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('adminUser').value;
+      const pass = document.getElementById('adminPass').value;
+
+      if (user === "admin" && pass === "admin123") {
+        isAdmin = true;
+        document.getElementById('adminLoginForm').classList.add('hidden');
+        document.getElementById('adminControls').classList.remove('hidden');
+        document.getElementById('loginError').classList.add('hidden');
+      } else {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    function handleAdminLogout() {
+      isAdmin = false;
+      document.getElementById('adminLoginForm').classList.remove('hidden');
+      document.getElementById('adminControls').classList.add('hidden');
+      closeModal('loginModal');
+    }
+
+    function openAddProposalModal() {
+      closeModal('loginModal');
+      document.getElementById('formTitle').innerText = "Add Proposal";
+      
+      document.getElementById('fieldName').value = "";
+      document.getElementById('fieldAge').value = "";
+      document.getElementById('fieldHeight').value = "";
+      document.getElementById('fieldCity').value = "";
+      document.getElementById('fieldSociety').value = "";
+      document.getElementById('fieldEducation').value = "";
+      document.getElementById('fieldProfession').value = "";
+      document.getElementById('fieldWhatsapp').value = "";
+      document.getElementById('fieldPhotoFile').value = "";
+      document.getElementById('fieldBio').value = "";
+
+      openModal('proposalFormModal');
+    }
+
+    // Canvas Image Compression Handler
+    function compressAndGetImageData(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const maxDim = 500;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxDim) {
+                height *= maxDim / width;
+                width = maxDim;
+              }
+            } else {
+              if (height > maxDim) {
+                width *= maxDim / height;
+                height = maxDim;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+          };
+          img.onerror = error => reject(error);
+        };
+      });
+    }
+
+    async function saveProposal(e) {
+      e.preventDefault();
+      const btn = document.getElementById('saveProposalSubmitBtn');
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Optimizing & Saving...`;
+      btn.disabled = true;
+
+      const name = document.getElementById('fieldName').value;
+      const age = document.getElementById('fieldAge').value;
+      const height = document.getElementById('fieldHeight').value;
+      const city = document.getElementById('fieldCity').value;
+      const society = document.getElementById('fieldSociety').value;
+      const education = document.getElementById('fieldEducation').value;
+      const profession = document.getElementById('fieldProfession').value;
+      const category = document.getElementById('fieldCategory').value;
+      const whatsapp = document.getElementById('fieldWhatsapp').value || "923000000000";
+      const bio = document.getElementById('fieldBio').value;
+      const fileInput = document.getElementById('fieldPhotoFile');
+
+      let photoUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400";
+
+      if (fileInput.files && fileInput.files[0]) {
+        try {
+          photoUrl = await compressAndGetImageData(fileInput.files[0]);
+        } catch (err) {
+          console.error("Compression error", err);
+        }
+      }
+
+      const newProposal = {
+        id: "p_" + Date.now(),
+        name, age, height, city, society, education, profession, category, whatsapp, bio,
+        photo: photoUrl
+      };
+
+      proposals.unshift(newProposal);
+      localStorage.setItem('rp_proposals', JSON.stringify(proposals));
+
+      btn.innerHTML = `Save & Release Proposal`;
+      btn.disabled = false;
+
+      renderMapMarkers();
+      renderCityPills();
+      renderCards();
+      closeModal('proposalFormModal');
+    }
+
+    function handleCitySubscribe(e) {
+      e.preventDefault();
+      document.getElementById('subSuccess').classList.remove('hidden');
+      setTimeout(() => {
+        closeModal('subscribeModal');
+        document.getElementById('subSuccess').classList.add('hidden');
+      }, 2000);
+    }
+
+    window.onload = function() {
+      initMap();
+      updateBadges();
+      renderCityPills();
+      renderCards();
+    };
+  </script>
+</body>
+</html>
