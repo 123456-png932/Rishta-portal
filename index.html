@@ -64,7 +64,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 flex justify-center items-center min-h-screen p-0 sm:p-4">
 
-  <!-- Main Phone Frame / Container -->
+  <!-- Main Phone Frame / Mobile Container -->
   <div class="w-full max-w-md bg-slate-50 min-h-screen sm:min-h-[844px] sm:max-h-[920px] sm:rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden flex flex-col relative">
 
     <!-- Top Navigation Header -->
@@ -109,7 +109,7 @@
       </div>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- Main Scrollable Content Area -->
     <main id="mainScrollArea" class="flex-grow overflow-y-auto no-scrollbar space-y-3 pb-20">
 
       <!-- Interactive Map Section -->
@@ -125,13 +125,13 @@
             </div>
           </div>
 
-          <!-- Top Right Controls (Includes Cross Button for Exiting Map) -->
+          <!-- Top Right Map Controls (Including Prominent Top Cross Close Button) -->
           <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
             <button onclick="zoomToPakistanOverview()" class="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-1.5 hover:bg-slate-50 transition">
               <i class="fa-solid fa-globe text-emerald-700"></i> All Pakistan
             </button>
 
-            <!-- Cross Button to Exit Map View -->
+            <!-- Close (Cross) Button for Fullscreen / Map Mode -->
             <button id="exitFullscreenMapBtn" onclick="closeFullscreenMap()" class="hidden bg-slate-900/90 hover:bg-slate-900 text-white w-8 h-8 rounded-full shadow-lg items-center justify-center transition backdrop-blur-md">
               <i class="fa-solid fa-xmark text-sm"></i>
             </button>
@@ -174,9 +174,9 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar (Auto hides on scroll, reappears at top) -->
+    <!-- Bottom Navigation Bar (Phone Layout Only: Locks when opening app, disappears immediately on scroll, reappears at the top) -->
     <nav id="bottomNav" class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 transform translate-y-0 opacity-100">
-      <button onclick="closeFullscreenMap(); zoomToPakistanOverview()" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
+      <button onclick="closeFullscreenMap(); zoomToPakistanOverview(); scrollToTop();" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
         <i class="fa-solid fa-house text-base"></i>
         <span class="text-[10px]">Home</span>
       </button>
@@ -192,7 +192,7 @@
 
     <!-- Modal: Rishtas Aunty WhatsApp -->
     <div id="rishtasAuntyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
         <div class="flex justify-between items-center border-b pb-2.5">
           <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-user-nurse text-emerald-600"></i> Rishtas Aunty</h3>
           <button onclick="closeModal('rishtasAuntyModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -210,33 +210,34 @@
       </div>
     </div>
 
-    <!-- Modal: About Process -->
+    <!-- Modal: About Process (Updated Info & Top Cross Close Button) -->
     <div id="aboutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar relative">
         <div class="flex justify-between items-center border-b pb-2.5">
-          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-circle-info text-emerald-600"></i> Our Process</h3>
-          <button onclick="closeModal('aboutModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-circle-info text-emerald-600"></i> About Rishta Portal</h3>
+          <button onclick="closeModal('aboutModal')" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <div class="space-y-3 text-xs text-slate-600">
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
-            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">01 — We Source</h4>
-            <p>Our team identifies genuine marriage proposals through our personal network and trusted sources.</p>
+          <p class="leading-relaxed">Rishta Portal is a privacy-conscious matrimonial platform created to connect families and individuals across all regions of Pakistan and AJK through verified listings and direct communication.</p>
+          
+          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
+            <h4 class="font-extrabold text-emerald-800 text-xs">01 — Verified Verification & Review</h4>
+            <p class="text-[11px]">Proposals undergo primary review and regional confirmation before being published to ensure active, genuine listings.</p>
           </div>
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
-            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">02 — We Review</h4>
-            <p>We review the information available to us and assess the proposal before considering it for the platform.</p>
+
+          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
+            <h4 class="font-extrabold text-emerald-800 text-xs">02 — Interactive Map Search</h4>
+            <p class="text-[11px]">Pinpoint proposals by city, society, or region using real-time map controls and interactive markers.</p>
           </div>
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
-            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">03 — We Confirm</h4>
-            <p>We make reasonable efforts to confirm the key information provided to us. However, information can change or may not always be independently verifiable.</p>
+
+          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
+            <h4 class="font-extrabold text-emerald-800 text-xs">03 — Direct WhatsApp Contact</h4>
+            <p class="text-[11px]">Connect directly with families or match managers with one click without middleman friction.</p>
           </div>
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
-            <h4 class="font-extrabold text-emerald-800 text-sm mb-1">04 — We Represent</h4>
-            <p>Selected proposals are professionally presented on Rishta Portal for families and individuals to consider.</p>
-          </div>
-          <div class="bg-amber-50 p-3.5 rounded-2xl border border-amber-200 text-amber-900 space-y-1">
-            <h4 class="font-extrabold text-amber-800 text-xs flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Important</h4>
-            <p class="text-[11px] leading-relaxed">Rishta Portal does not guarantee that every piece of information in a profile is complete, current, or accurate. Users and families should conduct their own independent verification before making any personal, financial, or marriage-related decision.</p>
+
+          <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-amber-900 space-y-1">
+            <h4 class="font-extrabold text-amber-800 text-xs flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Family Disclaimer</h4>
+            <p class="text-[11px] leading-relaxed">Families are advised to conduct independent verification before entering into personal or marital commitments.</p>
           </div>
         </div>
         <button onclick="closeModal('aboutModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
@@ -245,7 +246,7 @@
 
     <!-- Modal: Saved Proposals -->
     <div id="savedModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col relative">
         <div class="flex justify-between items-center border-b pb-2.5">
           <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-bookmark text-emerald-600"></i> Saved Profiles</h3>
           <button onclick="closeModal('savedModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -257,7 +258,7 @@
 
     <!-- Modal: History -->
     <div id="historyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col relative">
         <div class="flex justify-between items-center border-b pb-2.5">
           <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-slate-500"></i> Browsing History</h3>
           <button onclick="closeModal('historyModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -272,7 +273,7 @@
 
     <!-- Modal: Subscribe Alerts -->
     <div id="subscribeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
         <div class="flex justify-between items-center border-b pb-2.5">
           <h3 class="text-base font-extrabold text-slate-900"><i class="fa-regular fa-bell text-amber-500 me-2"></i>City Rishta Alerts</h3>
           <button onclick="closeModal('subscribeModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -292,9 +293,9 @@
       </div>
     </div>
 
-    <!-- Modal: Admin Login & Panel -->
+    <!-- Modal: Admin Login & Panel (Credentials: Naseem / XXXNASEEXXXRISHTAXXX2000XXX) -->
     <div id="loginModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
         <div class="flex justify-between items-center border-b pb-2">
           <h3 class="text-base font-extrabold text-slate-900"><i class="fa-solid fa-shield-halved text-emerald-800 me-2"></i>Admin Access</h3>
           <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -330,7 +331,7 @@
 
     <!-- Modal: Add / Edit Proposal Form -->
     <div id="proposalFormModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto no-scrollbar">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto no-scrollbar relative">
         <div class="flex justify-between items-center border-b pb-2">
           <h3 id="formTitle" class="text-base font-extrabold text-slate-900">Add Proposal</h3>
           <button onclick="closeModal('proposalFormModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -457,9 +458,13 @@
       'peshawar': { lat: 34.0151, lng: 71.5249, zoom: 12 },
       'quetta': { lat: 30.1798, lng: 66.9750, zoom: 12 },
       'faisalabad': { lat: 31.4504, lng: 73.1350, zoom: 12 },
-      'multan': { lat: 30.1575, lng: 71.5249, zoom: 12 }
+      'multan': { lat: 30.1575, lng: 71.5249, zoom: 12 },
+      'bagh': { lat: 33.9803, lng: 73.7744, zoom: 12 },
+      'bhimber': { lat: 32.9746, lng: 74.0788, zoom: 12 },
+      'kotli': { lat: 33.5184, lng: 73.9022, zoom: 12 }
     };
 
+    // ZERO DEFAULT PROPOSALS: Starts completely clean and syncs with cloud/local database
     let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || [];
     let savedProfiles = JSON.parse(localStorage.getItem('rp_saved')) || [];
     let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
@@ -694,7 +699,14 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-10 bg-white rounded-3xl p-6"><p class="text-xs font-bold text-slate-600">No proposals found matching criteria.</p></div>`;
+        container.innerHTML = `
+          <div class="text-center py-12 bg-white rounded-3xl p-6 border border-slate-100 space-y-2">
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-lg">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-700">No proposals available right now.</p>
+            <p class="text-[10px] text-slate-400 max-w-xs mx-auto">Admin can add proposals using Admin Access portal, or try clearing active search filters.</p>
+          </div>`;
         return;
       }
 
@@ -772,6 +784,7 @@
       }
     }
 
+    // ADMIN CREDENTIALS AUTHENTICATION (Username: Naseem, Password: XXXNASEEXXXRISHTAXXX2000XXX)
     function handleAdminLogin(e) {
       e.preventDefault();
       const enteredUser = document.getElementById('adminUser').value;
@@ -891,12 +904,23 @@
       }, 2000);
     }
 
+    function scrollToTop() {
+      const mainScroll = document.getElementById('mainScrollArea');
+      if (mainScroll) {
+        mainScroll.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // PHONE APP LAYOUT ONLY: Scroll behavior listener for Bottom Navigation
+    // Bottom nav stays locked upon opening, hides as soon as scrolling starts, reappears ONLY at top (scrollTop === 0)
     function initScrollNavListener() {
       const mainScroll = document.getElementById('mainScrollArea');
       const bottomNav = document.getElementById('bottomNav');
 
+      if (!mainScroll || !bottomNav) return;
+
       mainScroll.addEventListener('scroll', () => {
-        if (mainScroll.scrollTop > 10) {
+        if (mainScroll.scrollTop > 0) {
           bottomNav.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
           bottomNav.classList.remove('translate-y-0', 'opacity-100');
         } else {
