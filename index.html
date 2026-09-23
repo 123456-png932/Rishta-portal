@@ -22,7 +22,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
     (function(){
-      // Initialized with your EmailJS Public Key
       emailjs.init("aACAqlnWlWDvJoVZU");
     })();
   </script>
@@ -181,7 +180,7 @@
         <i class="fa-solid fa-house text-base"></i>
         <span class="text-[10px]">Home</span>
       </button>
-      <button onclick="openFullscreenMap()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
+      <button onclick="openFullscreenMap(); scrollToTop();" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
         <i class="fa-solid fa-map text-base"></i>
         <span class="text-[10px]">Interactive Map</span>
       </button>
@@ -222,18 +221,13 @@
           <p class="leading-relaxed">Rishta Portal is a privacy-conscious matrimonial platform created to connect families and individuals across all regions of Pakistan and AJK through verified listings and direct communication.</p>
           
           <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
-            <h4 class="font-extrabold text-emerald-800 text-xs">01 — Verified Verification & Review</h4>
-            <p class="text-[11px]">Proposals undergo primary review and regional confirmation before being published to ensure active, genuine listings.</p>
+            <h4 class="font-extrabold text-emerald-800 text-xs">01 — Verified Review & Family Privacy</h4>
+            <p class="text-[11px]">Proposals undergo primary review with optional family-consented privacy blurring for sensitive listings.</p>
           </div>
 
           <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
             <h4 class="font-extrabold text-emerald-800 text-xs">02 — Interactive Map Search</h4>
             <p class="text-[11px]">Pinpoint proposals by city, society, or region using real-time map controls and interactive markers.</p>
-          </div>
-
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
-            <h4 class="font-extrabold text-emerald-800 text-xs">03 — Direct WhatsApp Contact</h4>
-            <p class="text-[11px]">Connect directly with families or match managers with one click without middleman friction.</p>
           </div>
 
           <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-amber-900 space-y-1">
@@ -331,7 +325,7 @@
       </div>
     </div>
 
-    <!-- Modal: Add / Edit Proposal Form -->
+    <!-- Modal: Add / Edit Proposal Form with Phone Image Upload & Privacy Toggles -->
     <div id="proposalFormModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto no-scrollbar relative">
         <div class="flex justify-between items-center border-b pb-2">
@@ -342,6 +336,7 @@
           <input type="hidden" id="editingProposalId" value="">
           <input type="hidden" id="fieldLat" value="">
           <input type="hidden" id="fieldLng" value="">
+          <input type="hidden" id="fieldPhotoBase64" value="">
 
           <div>
             <label class="block font-semibold text-slate-600 mb-1">Full Name</label>
@@ -402,10 +397,29 @@
               <input type="text" id="fieldWhatsapp" placeholder="923001234567" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
             </div>
           </div>
+
+          <!-- Phone / WhatsApp Image Upload Input -->
           <div>
-            <label class="block font-semibold text-slate-600 mb-1">Photo Image URL</label>
-            <input type="url" id="fieldPhoto" placeholder="https://images.unsplash.com/..." class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50 text-slate-600">
+            <label class="block font-semibold text-slate-600 mb-1">Upload Photo (from Phone, WhatsApp, Gallery)</label>
+            <input type="file" id="fieldPhotoFile" accept="image/*" onchange="handleImageUpload(event)" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-slate-200 rounded-xl bg-slate-50">
+            <div id="photoPreviewContainer" class="mt-2 hidden">
+              <img id="photoPreview" class="w-16 h-16 rounded-xl object-cover border shadow-sm">
+            </div>
           </div>
+
+          <!-- Dynamic Family Privacy Toggles -->
+          <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+            <span class="block font-bold text-slate-700 text-[11px]"><i class="fa-solid fa-shield-halved text-emerald-600 me-1"></i> Family Consent Privacy Toggles</span>
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] text-slate-600 font-medium cursor-pointer" for="fieldBlurPhoto">Blur Photo for Privacy</label>
+              <input type="checkbox" id="fieldBlurPhoto" class="w-4 h-4 accent-emerald-600 rounded">
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] text-slate-600 font-medium cursor-pointer" for="fieldHideLocation">Hide Location / Confidential</label>
+              <input type="checkbox" id="fieldHideLocation" class="w-4 h-4 accent-emerald-600 rounded">
+            </div>
+          </div>
+
           <div>
             <label class="block font-semibold text-slate-600 mb-1">Description</label>
             <textarea id="fieldBio" rows="2" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50"></textarea>
@@ -605,7 +619,7 @@
         marker.bindPopup(`
           <div style="font-family: 'Plus Jakarta Sans', sans-serif;" class="text-xs p-1">
             <strong class="text-emerald-800 text-sm block">${p.name}</strong>
-            <span class="text-slate-500">${p.city} (${p.society})</span>
+            <span class="text-slate-500">${p.hideLocation ? 'Confidential Location' : p.city + ' (' + p.society + ')'}</span>
           </div>
         `);
         markersGroup.addLayer(marker);
@@ -715,16 +729,23 @@
         const isSaved = savedProfiles.some(sp => sp.id === p.id);
         const waNum = p.whatsapp || "923000000000";
         const photoUrl = p.photo || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400";
+        
+        // Dynamic Privacy Rules Styling
+        const photoClass = p.blurPhoto ? "filter blur-md hover:blur-none transition cursor-pointer" : "";
+        const locationDisplay = p.hideLocation ? `<span class="italic text-slate-400">Confidential Region</span>` : `${p.city} <span class="text-slate-400 font-normal">(${p.society})</span>`;
 
         return `
           <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm space-y-3">
             <div class="flex gap-3">
-              <img src="${photoUrl}" class="w-20 h-20 rounded-2xl object-cover shadow-sm">
+              <div class="relative">
+                <img src="${photoUrl}" class="w-20 h-20 rounded-2xl object-cover shadow-sm ${photoClass}" title="${p.blurPhoto ? 'Family Privacy: Photo blurred. Hover to reveal.' : ''}">
+                ${p.blurPhoto ? '<span class="absolute bottom-0 right-0 bg-slate-900/80 text-white text-[8px] px-1.5 py-0.5 rounded-tl-lg font-bold">Blurred</span>' : ''}
+              </div>
               <div class="flex-grow space-y-1">
                 <div class="flex items-start justify-between">
                   <div>
                     <h3 class="font-extrabold text-slate-900 text-sm leading-tight">${p.name}</h3>
-                    <p class="text-[11px] text-emerald-800 font-bold">${p.city} <span class="text-slate-400 font-normal">(${p.society})</span></p>
+                    <p class="text-[11px] text-emerald-800 font-bold">${locationDisplay}</p>
                   </div>
                   <button onclick="toggleSave('${p.id}')" class="text-base ${isSaved ? 'text-emerald-600' : 'text-slate-300'}">
                     <i class="${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
@@ -790,7 +811,9 @@
       const enteredUser = document.getElementById('adminUser').value;
       const enteredPass = document.getElementById('adminPass').value;
 
-      if (enteredUser === "Naseem" && enteredPass === "XXXNASEEXXXRISHTAXXX2000XXX") {
+      // Primary Admin + Special Google Reviewer Dummy Account
+      if ((enteredUser === "Naseem" && enteredPass === "XXXNASEEXXXRISHTAXXX2000XXX") ||
+          (enteredUser === "google_reviewer" && enteredPass === "Review2026!")) {
         isAdmin = true;
         sessionStorage.setItem('rp_admin_logged', 'true');
         checkAdminState();
@@ -808,6 +831,20 @@
       renderCards();
     }
 
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const base64String = event.target.result;
+          document.getElementById('fieldPhotoBase64').value = base64String;
+          document.getElementById('photoPreview').src = base64String;
+          document.getElementById('photoPreviewContainer').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function openAddProposalModal() {
       closeModal('loginModal');
       document.getElementById('formTitle').innerText = "Add Proposal";
@@ -820,8 +857,12 @@
       document.getElementById('fieldEducation').value = "";
       document.getElementById('fieldProfession').value = "";
       document.getElementById('fieldWhatsapp').value = "";
-      document.getElementById('fieldPhoto').value = "";
+      document.getElementById('fieldPhotoBase64').value = "";
+      document.getElementById('fieldPhotoFile').value = "";
       document.getElementById('fieldBio').value = "";
+      document.getElementById('fieldBlurPhoto').checked = false;
+      document.getElementById('fieldHideLocation').checked = false;
+      document.getElementById('photoPreviewContainer').classList.add('hidden');
       document.getElementById('deleteFormBtn').classList.add('hidden');
       openModal('proposalFormModal');
       setTimeout(() => { initPickerMap(); pickerMap.invalidateSize(); }, 300);
@@ -842,8 +883,18 @@
       document.getElementById('fieldProfession').value = item.profession || "";
       document.getElementById('fieldCategory').value = item.category || "Professional";
       document.getElementById('fieldWhatsapp').value = item.whatsapp || "";
-      document.getElementById('fieldPhoto').value = item.photo || "";
+      document.getElementById('fieldPhotoBase64').value = item.photo || "";
       document.getElementById('fieldBio').value = item.bio;
+      document.getElementById('fieldBlurPhoto').checked = !!item.blurPhoto;
+      document.getElementById('fieldHideLocation').checked = !!item.hideLocation;
+      
+      if (item.photo) {
+        document.getElementById('photoPreview').src = item.photo;
+        document.getElementById('photoPreviewContainer').classList.remove('hidden');
+      } else {
+        document.getElementById('photoPreviewContainer').classList.add('hidden');
+      }
+
       document.getElementById('deleteFormBtn').classList.remove('hidden');
 
       openModal('proposalFormModal');
@@ -874,6 +925,11 @@
       const editId = document.getElementById('editingProposalId').value;
       const id = editId || "p_" + Date.now();
 
+      const existingItem = proposals.find(p => p.id === id);
+      const defaultFallbackPhoto = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400";
+      const savedBase64 = document.getElementById('fieldPhotoBase64').value;
+      const finalPhoto = savedBase64 || (existingItem ? existingItem.photo : defaultFallbackPhoto);
+
       const newProposal = {
         id: id,
         name: document.getElementById('fieldName').value,
@@ -885,8 +941,10 @@
         profession: document.getElementById('fieldProfession').value,
         category: document.getElementById('fieldCategory').value,
         whatsapp: document.getElementById('fieldWhatsapp').value || "923000000000",
-        photo: document.getElementById('fieldPhoto').value || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
+        photo: finalPhoto,
         bio: document.getElementById('fieldBio').value,
+        blurPhoto: document.getElementById('fieldBlurPhoto').checked,
+        hideLocation: document.getElementById('fieldHideLocation').checked,
         lat: parseFloat(document.getElementById('fieldLat').value) || 31.5204,
         lng: parseFloat(document.getElementById('fieldLng').value) || 31.5204
       };
@@ -895,7 +953,7 @@
       closeModal('proposalFormModal');
     }
 
-    // HANDLES EMAILJS ALERT SUBSCRIPTION WITH YOUR CREDENTIALS
+    // HANDLES EMAILJS ALERT SUBSCRIPTION
     function handleCitySubscribe(e) {
       e.preventDefault();
       
@@ -906,7 +964,6 @@
       submitBtn.disabled = true;
       submitBtn.innerText = "Subscribing...";
 
-      // Service ID: service_yzk2m6f, Template ID: template_i9nwegh
       emailjs.send("service_yzk2m6f", "template_i9nwegh", {
         email: emailVal,
         city: cityVal
