@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rishta Portal - Matchmaking Service</title>
+    <title>Rishta Portal - Trusted Matrimonial Service</title>
     
     <meta property="og:title" content="Rishta Portal - Trusted Matchmaking">
     <meta property="og:description" content="Find the perfect match for you or your family members.">
@@ -12,45 +12,64 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     
     <style>
-        /* === Global Styles === */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; color: #333; }
-        header { background-color: #0056b3; color: white; text-align: center; padding: 1.5rem 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
-        header h1 { margin: 0; font-size: 26px; }
-        header p { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
-        
-        .admin-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .admin-btn:hover { background: white; color: #0056b3; }
+        /* === Classic Matrimonial Theme & Styles === */
+        :root {
+            --primary-color: #8b0000; /* Deep Maroon / Rishta Theme */
+            --secondary-color: #d4af37; /* Gold Accent */
+            --bg-color: #fcfbfa;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+        }
 
-        /* === Grid & Card Layout === */
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .profile-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); border: 1px solid #eaeaea; display: flex; flex-direction: column; justify-content: space-between; }
+        body { font-family: 'Georgia', serif; background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-color); }
         
-        .profile-img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; background: #eee; }
-        .profile-card h3 { margin: 0 0 10px 0; color: #0056b3; font-size: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
-        .profile-card p { margin: 8px 0; font-size: 15px; color: #555; }
+        /* Header Banner */
+        header { background: linear-gradient(135deg, var(--primary-color), #5c0000); color: white; text-align: center; padding: 2.5rem 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: relative; border-bottom: 4px solid var(--secondary-color); }
+        header h1 { margin: 0; font-size: 32px; font-family: 'Times New Roman', serif; letter-spacing: 1px; }
+        header p { margin: 10px 0 0; font-size: 16px; opacity: 0.9; font-style: italic; }
         
-        /* === Action Buttons === */
+        .admin-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); color: white; border: 1px solid var(--secondary-color); padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-family: sans-serif; transition: 0.3s; }
+        .admin-btn:hover { background: var(--secondary-color); color: #000; font-weight: bold; }
+
+        /* Main Container & Search Filter */
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .search-bar-container { display: flex; justify-content: center; margin-bottom: 30px; }
+        .search-input { width: 100%; max-width: 600px; padding: 12px 20px; font-size: 16px; border: 2px solid #ddd; border-radius: 30px; outline: none; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-input:focus { border-color: var(--primary-color); }
+
+        /* Profiles Grid */
+        .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+        .profile-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.06); border: 1px solid #eaeaea; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
+        .profile-card:hover { transform: translateY(-3px); }
+        
+        .profile-img { width: 100%; height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; background: #f9f9f9; }
+        .profile-card h3 { margin: 0 0 12px 0; color: var(--primary-color); font-size: 22px; font-family: 'Georgia', serif; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
+        .profile-card p { margin: 6px 0; font-size: 14px; color: #444; }
+        .profile-card strong { color: #111; }
+        
+        /* Action Buttons */
         .card-actions { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-        .btn-share { flex: 1; background-color: #25D366; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-report { flex: 1; background-color: #fff; color: #d9534f; border: 1px solid #d9534f; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-map { background-color: #17a2b8; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; width: 100%; margin-top: 8px; }
-        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-top: 10px; display: none; }
+        .btn-share { flex: 1; background-color: #25D366; color: white; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-report { flex: 1; background-color: #fff; color: #d9534f; border: 1px solid #d9534f; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-map { background-color: #20b2aa; color: white; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; width: 100%; margin-top: 8px; }
+        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-top: 10px; display: none; }
         
-        /* === Admin Panel Styles === */
-        .admin-panel { display: none; background: white; border: 2px solid #0056b3; border-radius: 10px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .admin-panel h2 { margin-top: 0; color: #0056b3; }
+        /* Admin Panel Styles */
+        .admin-panel { display: none; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .admin-panel h2 { margin-top: 0; color: var(--primary-color); font-family: 'Georgia', serif; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn-submit { background-color: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .btn-submit { background-color: var(--primary-color); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-submit:hover { background-color: #600; }
         
-        /* === Interactive Map Modal with Cross Close Button === */
-        .map-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-        .map-modal-content { background: white; width: 90%; max-width: 600px; padding: 20px; border-radius: 10px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .close-map-btn { position: absolute; top: 15px; right: 15px; background: #dc3545; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 1010; }
+        /* Interactive Map Modal with Classic Styling & Cross Button */
+        .map-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 1000; justify-content: center; align-items: center; }
+        .map-modal-content { background: white; width: 90%; max-width: 650px; padding: 25px; border-radius: 12px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .close-map-btn { position: absolute; top: 15px; right: 15px; background: #dc3545; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 1010; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .close-map-btn:hover { background: #b02a37; }
-        .map-container { width: 100%; height: 350px; background: #eee; border-radius: 6px; margin-top: 15px; display: flex; justify-content: center; align-items: center; color: #666; }
+        .map-container { width: 100%; height: 350px; background: #eee; border-radius: 8px; margin-top: 15px; border: 1px solid #ccc; overflow: hidden; display: flex; justify-content: center; align-items: center; color: #666; }
 
         .loading-text { text-align: center; font-size: 18px; color: #666; grid-column: 1 / -1; padding: 40px; }
     </style>
@@ -59,15 +78,20 @@
 
     <header>
         <h1>Rishta Portal</h1>
-        <p>Find your perfect match with trust and security.</p>
+        <p>A trusted bridge for sacred matrimonial alliances.</p>
         <button class="admin-btn" onclick="window.adminLogin()">Admin Access</button>
     </header>
 
     <div class="container">
         
+        <!-- SEARCH & FILTER BAR -->
+        <div class="search-bar-container">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Search profiles by name, city, profession, or caste..." oninput="window.filterProfiles()">
+        </div>
+
         <!-- === ADMIN ADD PROFILE FORM === -->
         <div id="admin-panel" class="admin-panel">
-            <h2>Add New Profile & Photo</h2>
+            <h2>Add New Rishta Profile & Photo</h2>
             <form id="add-profile-form" onsubmit="window.addProfile(event)">
                 <div class="form-group">
                     <label>Full Name</label>
@@ -95,7 +119,7 @@
                 </div>
                 <div class="form-group">
                     <label>Additional Details</label>
-                    <textarea id="p-details" rows="3" placeholder="Family background, requirements, etc."></textarea>
+                    <textarea id="p-details" rows="3" placeholder="Family background, education, requirements, etc."></textarea>
                 </div>
                 <button type="submit" class="btn-submit">➕ Save Profile to Database</button>
             </form>
@@ -111,10 +135,9 @@
     <div id="map-modal" class="map-modal">
         <div class="map-modal-content">
             <button class="close-map-btn" onclick="window.closeMapModal()">✕</button>
-            <h3 id="map-modal-title" style="margin-top:0; color:#0056b3;">Location Map</h3>
-            <p id="map-modal-subtitle" style="font-size:14px; color:#555;"></p>
+            <h3 id="map-modal-title" style="margin-top:0; color:var(--primary-color); font-family:'Georgia',serif;">Location Map</h3>
+            <p id="map-modal-subtitle" style="font-size:14px; color:#555; margin-bottom:10px;"></p>
             <div class="map-container" id="map-frame-container">
-                <!-- Embedded OpenStreetMap iframe loaded dynamically -->
                 <p>Loading interactive map...</p>
             </div>
         </div>
@@ -176,7 +199,6 @@
                 return;
             }
 
-            // Read file and compress via Canvas to fit safely in Firebase
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
@@ -240,7 +262,6 @@
             document.getElementById('map-modal-subtitle').innerText = `Showing registered location for ${personName}`;
             
             const frameContainer = document.getElementById('map-frame-container');
-            // Use OpenStreetMap embed cleanly without requiring API keys
             const encodedCity = encodeURIComponent(cityName);
             frameContainer.innerHTML = `<iframe width="100%" height="100%" style="border:0;" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=34.0%2C12.0%2C55.0%2C33.0&layer=mapnik&marker=${encodedCity}"></iframe>`;
             
@@ -249,10 +270,9 @@
 
         window.closeMapModal = function() {
             document.getElementById('map-modal').style.display = 'none';
-            document.getElementById('map-frame-container').innerHTML = ''; // Clear iframe
+            document.getElementById('map-frame-container').innerHTML = '';
         };
 
-        // Close modal if user clicks outside the modal content box
         window.onclick = function(event) {
             const modal = document.getElementById('map-modal');
             if (event.target === modal) {
@@ -268,10 +288,7 @@
             const shareUrl = window.location.href;
 
             if (navigator.share) {
-                try { await navigator.share({ title: `Rishta Profile: ${name}`, text: shareText, url: shareUrl }); } 
-                catch (err) { console.error('Error sharing:', err); }
-            } else {
-                const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + "\n" + shareUrl)}`;
+                try { await navigator.share({ title: `Rishta Profile: ${name}`, text: shareText, url: shareUrl }); }                  catch (err) { console.error('Error sharing:', err); }             } else {                 const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + "\n" + shareUrl)}`;
                 window.open(waUrl, '_blank');
             }
         };
@@ -293,14 +310,29 @@
         };
 
         // ==========================================
-        // 6. RENDER PROFILES TO UI
+        // 6. SEARCH & FILTER LOGIC
+        // ==========================================
+        window.filterProfiles = function() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = globalProfilesData.filter(profile => {
+                const name = (profile.name || '').toLowerCase();
+                const city = (profile.city || '').toLowerCase();
+                const profession = (profile.profession || '').toLowerCase();
+                const caste = (profile.caste || '').toLowerCase();
+                return name.includes(query) || city.includes(query) || profession.includes(query) || caste.includes(query);
+            });
+            renderProfiles(filtered);
+        };
+
+        // ==========================================
+        // 7. RENDER PROFILES TO UI
         // ==========================================
         function renderProfiles(profilesArray) {
             const container = document.getElementById('profiles-container');
             container.innerHTML = ''; 
 
             if (profilesArray.length === 0) {
-                container.innerHTML = '<div class="loading-text">No profiles available yet.</div>';
+                container.innerHTML = '<div class="loading-text">No profiles found matching your search.</div>';
                 return;
             }
 
@@ -312,7 +344,7 @@
                     ? `<button class="btn-delete" style="display:block;" onclick="window.deleteProfile('${profile.id}')">🗑️ Delete Profile</button>` 
                     : ``;
 
-                const imgSrc = profile.image || 'https://via.placeholder.com/300x200?text=No+Photo';
+                const imgSrc = profile.image || 'https://via.placeholder.com/300x220?text=No+Photo';
 
                 card.innerHTML = `
                     <div>
@@ -338,7 +370,7 @@
         }
 
         // ==========================================
-        // 7. LIVE FIREBASE LISTENER
+        // 8. LIVE FIREBASE LISTENER
         // ==========================================
         onValue(profilesRef, (snapshot) => {
             const data = snapshot.val();
@@ -350,7 +382,7 @@
                 }
             }
             globalProfilesData = profilesArray.reverse(); 
-            renderProfiles(globalProfilesData);
+            window.filterProfiles(); // Keep search box responsive when new data arrives
         });
 
     </script>
