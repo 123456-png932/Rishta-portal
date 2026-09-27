@@ -1,965 +1,358 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rishta Portal - Trusted Matches</title>
-  
-  <!-- PWA & Mobile Web App Meta Tags -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Rishta Portal">
-  <meta name="theme-color" content="#047857">
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- EmailJS Integration -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script>
-    (function(){
-      // Initialized with your EmailJS Public Key
-      emailjs.init("aACAqlnWlWDvJoVZU");
-    })();
-  </script>
-  <!-- Firebase Compatibility SDKs (v8) for Real-time Cloud Sync -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rishta Portal - Matchmaking Service</title>
     
-    #leafletMap {
-      width: 100%;
-      height: 240px;
-      border-radius: 1.5rem;
-      z-index: 10;
-      transition: all 0.3s ease-in-out;
-    }
-    #pickerMap {
-      width: 100%;
-      height: 180px;
-      border-radius: 1rem;
-      z-index: 10;
-    }
-    .fullscreen-map {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 100 !important;
-      border-radius: 0 !important;
-    }
-    .leaflet-control-zoom { display: none !important; }
-    .leaflet-attribution-flag { display: none !important; }
-    .leaflet-container { font-family: 'Plus Jakarta Sans', sans-serif !important; }
-  </style>
+    <meta property="og:title" content="Rishta Portal - Trusted Matchmaking">
+    <meta property="og:description" content="Find the perfect match for you or your family members.">
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <style>
+        /* === Global Styles === */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; color: #333; }
+        header { background-color: #0056b3; color: white; text-align: center; padding: 1.5rem 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+        header h1 { margin: 0; font-size: 26px; }
+        header p { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
+        
+        .admin-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .admin-btn:hover { background: white; color: #0056b3; }
+
+        /* === Grid & Card Layout === */
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .profile-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); border: 1px solid #eaeaea; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .profile-img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; background: #eee; }
+        .profile-card h3 { margin: 0 0 10px 0; color: #0056b3; font-size: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .profile-card p { margin: 8px 0; font-size: 15px; color: #555; }
+        
+        /* === Action Buttons === */
+        .card-actions { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .btn-share { flex: 1; background-color: #25D366; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-report { flex: 1; background-color: #fff; color: #d9534f; border: 1px solid #d9534f; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-map { background-color: #17a2b8; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; width: 100%; margin-top: 8px; }
+        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-top: 10px; display: none; }
+        
+        /* === Admin Panel Styles === */
+        .admin-panel { display: none; background: white; border: 2px solid #0056b3; border-radius: 10px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .admin-panel h2 { margin-top: 0; color: #0056b3; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .btn-submit { background-color: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        
+        /* === Interactive Map Modal with Cross Close Button === */
+        .map-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .map-modal-content { background: white; width: 90%; max-width: 600px; padding: 20px; border-radius: 10px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-map-btn { position: absolute; top: 15px; right: 15px; background: #dc3545; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 1010; }
+        .close-map-btn:hover { background: #b02a37; }
+        .map-container { width: 100%; height: 350px; background: #eee; border-radius: 6px; margin-top: 15px; display: flex; justify-content: center; align-items: center; color: #666; }
+
+        .loading-text { text-align: center; font-size: 18px; color: #666; grid-column: 1 / -1; padding: 40px; }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 flex justify-center items-center min-h-screen p-0 sm:p-4">
+<body>
 
-  <!-- Main Phone Frame / Mobile Container -->
-  <div class="w-full max-w-md bg-slate-50 min-h-screen sm:min-h-[844px] sm:max-h-[920px] sm:rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden flex flex-col relative">
-
-    <!-- Top Navigation Header -->
-    <header class="bg-white px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 sticky top-0 z-40">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 text-emerald-700 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">Rishta Portal</h1>
-          <p id="syncStatusTag" class="text-[10px] text-emerald-600 font-medium tracking-wide flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Realtime Sync Active
-          </p>
-        </div>
-      </div>
-      <button onclick="toggleMenu()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition">
-        <i class="fa-solid fa-ellipsis text-lg"></i>
-      </button>
-
-      <!-- Options Dropdown Menu -->
-      <div id="dropdownMenu" class="hidden absolute right-5 top-14 bg-white shadow-xl rounded-2xl border border-slate-100 p-2 w-56 z-50 text-xs font-semibold">
-        <button onclick="openModal('rishtasAuntyModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-emerald-700 font-bold flex items-center gap-2">
-          <i class="fa-solid fa-user-nurse text-emerald-600"></i> Rishtas Aunty
-        </button>
-        <button onclick="openModal('savedModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 flex items-center justify-between">
-          <span><i class="fa-regular fa-bookmark me-2.5 text-emerald-600"></i>Saved Profiles</span>
-          <span id="savedBadge" class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full text-[10px]">0</span>
-        </button>
-        <button onclick="openModal('historyModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 flex items-center justify-between">
-          <span><i class="fa-solid fa-clock-rotate-left me-2.5 text-slate-500"></i>Browsing History</span>
-          <span id="historyBadge" class="bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full text-[10px]">0</span>
-        </button>
-        <button onclick="openModal('subscribeModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 flex items-center gap-2">
-          <i class="fa-regular fa-bell text-amber-500"></i> City Alerts Subscription
-        </button>
-        <div class="border-t border-slate-100 my-1"></div>
-        <button id="adminMenuBtn" onclick="openModal('loginModal')" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-emerald-800 font-bold flex items-center gap-2">
-          <i class="fa-solid fa-shield-halved"></i> Admin Portal Access
-        </button>
-      </div>
+    <header>
+        <h1>Rishta Portal</h1>
+        <p>Find your perfect match with trust and security.</p>
+        <button class="admin-btn" onclick="window.adminLogin()">Admin Access</button>
     </header>
 
-    <!-- Main Scrollable Content Area -->
-    <main id="mainScrollArea" class="flex-grow overflow-y-auto no-scrollbar space-y-3 pb-20">
-
-      <!-- Interactive Map Section -->
-      <section class="p-3 pb-1" id="mapSection">
-        <div id="mapWrapper" class="relative bg-emerald-900/5 rounded-3xl p-2 border border-emerald-100 shadow-sm overflow-hidden">
-          <div class="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 border border-slate-100 shadow-md max-w-[180px]">
-            <div class="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-0.5">
-              <i class="fa-solid fa-location-dot"></i> Find By City
-            </div>
-            <div class="relative mt-1.5">
-              <input type="text" id="mapSearchInput" onchange="handleCitySearch(this.value)" placeholder="Search city..." class="w-full bg-slate-50 text-[10px] pl-6 pr-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600">
-              <i class="fa-solid fa-magnifying-glass absolute left-2 top-2 text-[9px] text-slate-400"></i>
-            </div>
-          </div>
-
-          <!-- Top Right Map Controls -->
-          <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
-            <button onclick="zoomToPakistanOverview()" class="bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-1.5 hover:bg-slate-50 transition">
-              <i class="fa-solid fa-globe text-emerald-700"></i> All Pakistan
-            </button>
-
-            <!-- Close (Cross) Button for Fullscreen Map Mode -->
-            <button id="exitFullscreenMapBtn" onclick="closeFullscreenMap()" class="hidden bg-slate-900/90 hover:bg-slate-900 text-white w-8 h-8 rounded-full shadow-lg items-center justify-center transition backdrop-blur-md">
-              <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-          </div>
-
-          <div id="leafletMap"></div>
-
-          <div class="absolute bottom-4 right-4 z-20 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-2">
-            <i id="mapLocIcon" class="fa-solid fa-location-dot text-emerald-700 text-xs"></i>
-            <span class="text-[10px] font-bold text-slate-700">Region: <strong class="text-emerald-800" id="currentMapCityTag">All Pakistan</strong></span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Dynamic City Filter Pills -->
-      <section class="px-3">
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1" id="cityPillContainer"></div>
-      </section>
-
-      <!-- Keyword Search Bar -->
-      <section class="px-3">
-        <div class="relative">
-          <input type="text" id="keywordSearch" oninput="handleKeywordSearch(this.value)" placeholder="Search by degree, career, or city..." class="w-full bg-white border border-slate-200 text-xs rounded-2xl pl-9 pr-4 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-        </div>
-      </section>
-
-      <!-- Category Filter Tabs -->
-      <section class="px-3">
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-          <button onclick="setActiveCategory(this, 'All')" class="category-pill bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-xl whitespace-nowrap shadow-sm">All Matches</button>
-          <button onclick="setActiveCategory(this, 'Educated')" class="category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition">Educated</button>
-          <button onclick="setActiveCategory(this, 'Professional')" class="category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition">Professional</button>
-          <button onclick="setActiveCategory(this, 'Family Values')" class="category-pill bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap transition">Family Values</button>
-        </div>
-      </section>
-
-      <!-- Proposal Cards Container -->
-      <section class="px-3 space-y-3" id="cardsContainer"></section>
-
-    </main>
-
-    <!-- Bottom Navigation Bar -->
-    <nav id="bottomNav" class="bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 transform translate-y-0 opacity-100">
-      <button onclick="closeFullscreenMap(); zoomToPakistanOverview(); scrollToTop();" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold">
-        <i class="fa-solid fa-house text-base"></i>
-        <span class="text-[10px]">Home</span>
-      </button>
-      <button onclick="openFullscreenMap()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
-        <i class="fa-solid fa-map text-base"></i>
-        <span class="text-[10px]">Interactive Map</span>
-      </button>
-      <button onclick="openModal('aboutModal')" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-700 font-semibold transition">
-        <i class="fa-circle-info fa-solid text-base"></i>
-        <span class="text-[10px]">About</span>
-      </button>
-    </nav>
-
-    <!-- Modal: Rishtas Aunty WhatsApp -->
-    <div id="rishtasAuntyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
-        <div class="flex justify-between items-center border-b pb-2.5">
-          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-user-nurse text-emerald-600"></i> Rishtas Aunty</h3>
-          <button onclick="closeModal('rishtasAuntyModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <div class="py-6 text-center space-y-2">
-          <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-            <i class="fa-solid fa-comments"></i>
-          </div>
-          <p class="text-xs text-slate-600 font-medium">Get personalized matchmaking guidance directly on WhatsApp.</p>
-          <a href="https://wa.me/923000000000?text=Salam%20Rishta%20Aunty,%20I%20need%20assistance%20finding%20a%20match." target="_blank" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-md transition">
-            <i class="fa-brands fa-whatsapp me-1.5 text-sm"></i> Chat with Rishta Aunty
-          </a>
-        </div>
-        <button onclick="closeModal('rishtasAuntyModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
-      </div>
-    </div>
-
-    <!-- Modal: About Process -->
-    <div id="aboutModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar relative">
-        <div class="flex justify-between items-center border-b pb-2.5">
-          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-circle-info text-emerald-600"></i> About Rishta Portal</h3>
-          <button onclick="closeModal('aboutModal')" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
-        </div>
-        <div class="space-y-3 text-xs text-slate-600">
-          <p class="leading-relaxed">Rishta Portal is a privacy-conscious matrimonial platform created to connect families and individuals across all regions of Pakistan and AJK through verified listings and direct communication.</p>
-          
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
-            <h4 class="font-extrabold text-emerald-800 text-xs">01 — Verified Verification & Review</h4>
-            <p class="text-[11px]">Proposals undergo primary review and regional confirmation before being published to ensure active, genuine listings.</p>
-          </div>
-
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
-            <h4 class="font-extrabold text-emerald-800 text-xs">02 — Interactive Map Search</h4>
-            <p class="text-[11px]">Pinpoint proposals by city, society, or region using real-time map controls and interactive markers.</p>
-          </div>
-
-          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-1">
-            <h4 class="font-extrabold text-emerald-800 text-xs">03 — Direct WhatsApp Contact</h4>
-            <p class="text-[11px]">Connect directly with families or match managers with one click without middleman friction.</p>
-          </div>
-
-          <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-amber-900 space-y-1">
-            <h4 class="font-extrabold text-amber-800 text-xs flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Family Disclaimer</h4>
-            <p class="text-[11px] leading-relaxed">Families are advised to conduct independent verification before entering into personal or marital commitments.</p>
-          </div>
-        </div>
-        <button onclick="closeModal('aboutModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
-      </div>
-    </div>
-
-    <!-- Modal: Saved Proposals -->
-    <div id="savedModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col relative">
-        <div class="flex justify-between items-center border-b pb-2.5">
-          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-bookmark text-emerald-600"></i> Saved Profiles</h3>
-          <button onclick="closeModal('savedModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <div id="savedListContainer" class="flex-grow overflow-y-auto space-y-2.5 no-scrollbar"></div>
-        <button onclick="closeModal('savedModal')" class="w-full bg-slate-100 text-slate-800 font-bold text-xs py-2.5 rounded-xl">Close</button>
-      </div>
-    </div>
-
-    <!-- Modal: History -->
-    <div id="historyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[80vh] flex flex-col relative">
-        <div class="flex justify-between items-center border-b pb-2.5">
-          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-slate-500"></i> Browsing History</h3>
-          <button onclick="closeModal('historyModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <div id="historyListContainer" class="flex-grow overflow-y-auto space-y-2 no-scrollbar"></div>
-        <div class="flex justify-between items-center pt-2">
-          <button onclick="clearHistory()" class="text-xs text-rose-600 font-bold hover:underline">Clear History</button>
-          <button onclick="closeModal('historyModal')" class="bg-slate-100 text-slate-800 font-bold text-xs py-2 px-4 rounded-xl">Close</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Subscribe Alerts (Connected to EmailJS) -->
-    <div id="subscribeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
-        <div class="flex justify-between items-center border-b pb-2.5">
-          <h3 class="text-base font-extrabold text-slate-900"><i class="fa-regular fa-bell text-amber-500 me-2"></i>City Rishta Alerts</h3>
-          <button onclick="closeModal('subscribeModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <form onsubmit="handleCitySubscribe(event)" class="space-y-3 text-xs">
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Your Email</label>
-            <input type="email" id="subEmail" required placeholder="name@example.com" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Target City</label>
-            <input type="text" id="subCity" required placeholder="e.g. Multan, Rawalpindi" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
-          </div>
-          <p id="subSuccess" class="text-xs text-emerald-700 font-bold hidden"><i class="fa-solid fa-circle-check me-1"></i> Subscribed Successfully!</p>
-          <p id="subError" class="text-xs text-rose-600 font-bold hidden"><i class="fa-solid fa-circle-exclamation me-1"></i> Subscription failed. Try again.</p>
-          <button id="subSubmitBtn" type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition">Subscribe</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal: Admin Login & Panel -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 relative">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="text-base font-extrabold text-slate-900"><i class="fa-solid fa-shield-halved text-emerald-800 me-2"></i>Admin Access</h3>
-          <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-
-        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-3 text-xs">
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Username</label>
-            <input type="text" id="adminUser" required class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:outline-none">
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Password</label>
-            <div class="relative">
-              <input type="password" id="adminPass" required class="w-full border border-slate-200 rounded-xl p-2.5 pr-9 bg-slate-50 focus:outline-none">
-              <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none">
-                <i id="passwordToggleIcon" class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-          </div>
-          <p id="loginError" class="text-xs text-rose-600 hidden font-bold">Invalid Admin Credentials.</p>
-          <button type="submit" class="w-full bg-emerald-800 text-white font-bold py-2.5 rounded-xl">Login</button>
-        </form>
-
-        <div id="adminControls" class="hidden space-y-3 pt-2">
-          <p class="text-xs text-emerald-700 font-bold"><i class="fa-solid fa-circle-check me-1"></i> Admin Authenticated</p>
-          <button onclick="openAddProposalModal()" class="w-full bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2">
-            <i class="fa-solid fa-plus"></i> Release New Proposal
-          </button>
-          <button onclick="handleAdminLogout()" class="w-full bg-rose-100 text-rose-700 font-bold py-2 rounded-xl text-xs">Logout Admin</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Add / Edit Proposal Form -->
-    <div id="proposalFormModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto no-scrollbar relative">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 id="formTitle" class="text-base font-extrabold text-slate-900">Add Proposal</h3>
-          <button onclick="closeModal('proposalFormModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <form onsubmit="saveProposal(event)" class="space-y-2.5 text-xs">
-          <input type="hidden" id="editingProposalId" value="">
-          <input type="hidden" id="fieldLat" value="">
-          <input type="hidden" id="fieldLng" value="">
-
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Full Name</label>
-            <input type="text" id="fieldName" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Age</label>
-              <input type="text" id="fieldAge" required placeholder="24 Years" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Height</label>
-              <input type="text" id="fieldHeight" required placeholder="5'4&quot;" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">City</label>
-              <input type="text" id="fieldCity" required placeholder="Lahore" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Society / Area</label>
-              <input type="text" id="fieldSociety" required placeholder="DHA Phase 6" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-            </div>
-          </div>
-
-          <div class="space-y-1.5 pt-1">
-            <div class="flex justify-between items-center">
-              <label class="block font-semibold text-slate-700">Pinpoint Location on Map</label>
-              <button type="button" onclick="locateSocietyOnPicker()" class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 hover:bg-emerald-100">
-                <i class="fa-solid fa-magnifying-glass-location"></i> Find Pin
-              </button>
-            </div>
-            <div id="pickerMap" class="border border-slate-200"></div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Education</label>
-              <input type="text" id="fieldEducation" required placeholder="M.Sc CS" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Profession</label>
-              <input type="text" id="fieldProfession" required placeholder="Software Engineer" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Category</label>
-              <select id="fieldCategory" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-                <option value="Professional">Professional</option>
-                <option value="Educated">Educated</option>
-                <option value="Family Values">Family Values</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">WhatsApp Number</label>
-              <input type="text" id="fieldWhatsapp" placeholder="923001234567" class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50">
-            </div>
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Photo Image URL</label>
-            <input type="url" id="fieldPhoto" placeholder="https://images.unsplash.com/..." class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50 text-slate-600">
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Description</label>
-            <textarea id="fieldBio" rows="2" required class="w-full border border-slate-200 rounded-xl p-2 bg-slate-50"></textarea>
-          </div>
-          
-          <div id="adminFormActionButtons" class="flex gap-2 pt-2">
-            <button id="saveProposalSubmitBtn" type="submit" class="flex-grow bg-emerald-800 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2">
-              Save & Release Proposal
-            </button>
-            <button type="button" id="deleteFormBtn" onclick="deleteCurrentProposalFromForm()" class="hidden bg-rose-600 text-white font-bold px-4 py-2.5 rounded-xl hover:bg-rose-700 transition">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    // --- FIREBASE REAL-TIME CLOUD DATABASE CONFIGURATION ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyBTDGpkFur9meJjk72LNXFr1CC_xiYEU3Q",
-      authDomain: "rishtaportal-b9eac.firebaseapp.com",
-      databaseURL: "https://rishtaportal-b9eac-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "rishtaportal-b9eac",
-      storageBucket: "rishtaportal-b9eac.firebasestorage.app",
-      messagingSenderId: "993752158483",
-      appId: "1:993752158483:web:f44899225cf0d7acb40ae6",
-      measurementId: "G-MJP7ZXKJLX"
-    };
-
-    let db = null;
-    let proposalsRef = null;
-
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
-        proposalsRef = db.ref('proposals');
-      }
-    } catch(e) {
-      console.warn("Firebase execution context error.", e);
-    }
-
-    const cityCoordinates = {
-      'overview': { lat: 30.3753, lng: 69.3451, zoom: 5 },
-      'islamabad': { lat: 33.6844, lng: 73.0479, zoom: 12 },
-      'rawalpindi': { lat: 33.5651, lng: 73.0169, zoom: 12 },
-      'lahore': { lat: 31.5204, lng: 74.3587, zoom: 12 },
-      'karachi': { lat: 24.8607, lng: 67.0011, zoom: 11 },
-      'peshawar': { lat: 34.0151, lng: 71.5249, zoom: 12 },
-      'quetta': { lat: 30.1798, lng: 66.9750, zoom: 12 },
-      'faisalabad': { lat: 31.4504, lng: 73.1350, zoom: 12 },
-      'multan': { lat: 30.1575, lng: 71.5249, zoom: 12 },
-      'bagh': { lat: 33.9803, lng: 73.7744, zoom: 12 },
-      'bhimber': { lat: 32.9746, lng: 74.0788, zoom: 12 },
-      'kotli': { lat: 33.5184, lng: 73.9022, zoom: 12 }
-    };
-
-    let proposals = JSON.parse(localStorage.getItem('rp_proposals')) || [];
-    let savedProfiles = JSON.parse(localStorage.getItem('rp_saved')) || [];
-    let browsingHistory = JSON.parse(localStorage.getItem('rp_history')) || [];
-    let isAdmin = sessionStorage.getItem('rp_admin_logged') === 'true';
-
-    let map = null;
-    let markersGroup = null;
-    let pickerMap = null;
-    let pickerMarker = null;
-
-    let currentCityFilter = "All";
-    let currentCategoryFilter = "All";
-    let currentKeywordSearch = "";
-
-    function initRealtimeSync() {
-      if (!proposalsRef) return;
-
-      proposalsRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          proposals = Object.values(data);
-        } else {
-          proposals = [];
-        }
-        localStorage.setItem('rp_proposals', JSON.stringify(proposals));
-        renderMapMarkers();
-        renderCityPills();
-        renderCards();
-      });
-    }
-
-    function syncSaveProposalToCloud(item) {
-      if (proposalsRef) {
-        proposalsRef.child(item.id).set(item);
-      } else {
-        const idx = proposals.findIndex(p => p.id === item.id);
-        if (idx > -1) proposals[idx] = item;
-        else proposals.push(item);
-        localStorage.setItem('rp_proposals', JSON.stringify(proposals));
-        renderMapMarkers();
-        renderCityPills();
-        renderCards();
-      }
-    }
-
-    function syncDeleteProposalFromCloud(id) {
-      if (proposalsRef) {
-        proposalsRef.child(id).remove();
-      } else {
-        proposals = proposals.filter(p => p.id !== id);
-        localStorage.setItem('rp_proposals', JSON.stringify(proposals));
-        renderMapMarkers();
-        renderCityPills();
-        renderCards();
-      }
-    }
-
-    function togglePasswordVisibility() {
-      const passInput = document.getElementById('adminPass');
-      const icon = document.getElementById('passwordToggleIcon');
-      if (passInput.type === 'password') {
-        passInput.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-      } else {
-        passInput.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-      }
-    }
-
-    function initMap() {
-      const overview = cityCoordinates['overview'];
-      map = L.map('leafletMap', { zoomControl: false }).setView([overview.lat, overview.lng], overview.zoom);
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '' }).addTo(map);
-      markersGroup = L.layerGroup().addTo(map);
-      renderMapMarkers();
-    }
-
-    function initPickerMap() {
-      if (pickerMap) return;
-      const defaultCoord = cityCoordinates['lahore'];
-      pickerMap = L.map('pickerMap', { zoomControl: false }).setView([defaultCoord.lat, defaultCoord.lng], 12);
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '' }).addTo(pickerMap);
-      pickerMarker = L.marker([defaultCoord.lat, defaultCoord.lng], { draggable: true }).addTo(pickerMap);
-
-      pickerMarker.on('dragend', function() {
-        const coord = pickerMarker.getLatLng();
-        document.getElementById('fieldLat').value = coord.lat;
-        document.getElementById('fieldLng').value = coord.lng;
-      });
-
-      pickerMap.on('click', function(e) {
-        pickerMarker.setLatLng(e.latlng);
-        document.getElementById('fieldLat').value = e.latlng.lat;
-        document.getElementById('fieldLng').value = e.latlng.lng;
-      });
-    }
-
-    function setPickerLocation(lat, lng, zoom = 14) {
-      if (!pickerMap) initPickerMap();
-      pickerMap.setView([lat, lng], zoom);
-      pickerMarker.setLatLng([lat, lng]);
-      document.getElementById('fieldLat').value = lat;
-      document.getElementById('fieldLng').value = lng;
-    }
-
-    async function locateSocietyOnPicker() {
-      const city = document.getElementById('fieldCity').value.trim();
-      const society = document.getElementById('fieldSociety').value.trim();
-      const query = `${society} ${city} Pakistan`.trim();
-
-      if (!query) return;
-
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
-        const data = await res.json();
-        if (data && data.length > 0) {
-          setPickerLocation(parseFloat(data[0].lat), parseFloat(data[0].lon), 14);
-        }
-      } catch (e) {
-        console.error("Geocoding failed", e);
-      }
-    }
-
-    function renderMapMarkers() {
-      if (!map || !markersGroup) return;
-      markersGroup.clearLayers();
-
-      proposals.forEach(p => {
-        let lat = p.lat || cityCoordinates['overview'].lat;
-        let lng = p.lng || cityCoordinates['overview'].lng;
-
-        const marker = L.marker([lat, lng]);
-        marker.bindPopup(`
-          <div style="font-family: 'Plus Jakarta Sans', sans-serif;" class="text-xs p-1">
-            <strong class="text-emerald-800 text-sm block">${p.name}</strong>
-            <span class="text-slate-500">${p.city} (${p.society})</span>
-          </div>
-        `);
-        markersGroup.addLayer(marker);
-      });
-    }
-
-    function toggleMenu() {
-      document.getElementById('dropdownMenu').classList.toggle('hidden');
-    }
-
-    function openFullscreenMap() {
-      const mapEl = document.getElementById('leafletMap');
-      const exitBtn = document.getElementById('exitFullscreenMapBtn');
-      exitBtn.classList.remove('hidden');
-      exitBtn.classList.add('flex');
-      mapEl.classList.add('fullscreen-map');
-      setTimeout(() => map.invalidateSize(), 300);
-    }
-
-    function closeFullscreenMap() {
-      const mapEl = document.getElementById('leafletMap');
-      const exitBtn = document.getElementById('exitFullscreenMapBtn');
-      exitBtn.classList.add('hidden');
-      exitBtn.classList.remove('flex');
-      mapEl.classList.remove('fullscreen-map');
-      setTimeout(() => map.invalidateSize(), 300);
-    }
-
-    function zoomToPakistanOverview() {
-      const target = cityCoordinates['overview'];
-      map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
-      currentCityFilter = "All";
-      document.getElementById('currentMapCityTag').innerText = "All Pakistan";
-      renderCards();
-      renderCityPills();
-    }
-
-    function zoomToCity(cityName) {
-      if (cityName === "All") {
-        zoomToPakistanOverview();
-        return;
-      }
-
-      openFullscreenMap();
-      const cityKey = cityName.toLowerCase().trim();
-      const target = cityCoordinates[cityKey] || cityCoordinates['overview'];
-      map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
-      currentCityFilter = cityName;
-      document.getElementById('currentMapCityTag').innerText = cityName;
-      renderCards();
-      renderCityPills();
-    }
-
-    function handleCitySearch(val) {
-      if (!val) return;
-      zoomToCity(val);
-    }
-
-    function handleKeywordSearch(query) {
-      currentKeywordSearch = query.toLowerCase().trim();
-      renderCards();
-    }
-
-    function renderCityPills() {
-      const container = document.getElementById('cityPillContainer');
-      const cities = ["All", ...new Set(proposals.map(p => p.city))];
-
-      container.innerHTML = cities.map(city => {
-        const isActive = currentCityFilter.toLowerCase() === city.toLowerCase();
-        const bgClass = isActive ? "bg-emerald-800 text-white shadow-sm" : "bg-white text-slate-600 border border-slate-200";
-        return `<button onclick="zoomToCity('${city}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${bgClass}">${city}</button>`;
-      }).join('');
-    }
-
-    function setActiveCategory(btn, category) {
-      document.querySelectorAll('.category-pill').forEach(b => {
-        b.className = "category-pill bg-slate-100 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-xl whitespace-nowrap";
-      });
-      btn.className = "category-pill bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-xl whitespace-nowrap shadow-sm";
-      currentCategoryFilter = category;
-      renderCards();
-    }
-
-    function renderCards() {
-      const container = document.getElementById('cardsContainer');
-      let filtered = proposals.filter(p => {
-        const cityMatch = currentCityFilter === "All" || p.city.toLowerCase() === currentCityFilter.toLowerCase();
-        const catMatch = currentCategoryFilter === "All" || p.category === currentCategoryFilter;
-        const kw = currentKeywordSearch;
-        const kwMatch = !kw || p.name.toLowerCase().includes(kw) || p.profession.toLowerCase().includes(kw) || p.city.toLowerCase().includes(kw);
-        return cityMatch && catMatch && kwMatch;
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12 bg-white rounded-3xl p-6 border border-slate-100 space-y-2">
-            <div class="w-12 h-12 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-lg">
-              <i class="fa-solid fa-folder-open"></i>
-            </div>
-            <p class="text-xs font-bold text-slate-700">No proposals available right now.</p>
-            <p class="text-[10px] text-slate-400 max-w-xs mx-auto">Admin can add proposals using Admin Access portal, or try clearing active search filters.</p>
-          </div>`;
-        return;
-      }
-
-      container.innerHTML = filtered.map(p => {
-        const isSaved = savedProfiles.some(sp => sp.id === p.id);
-        const waNum = p.whatsapp || "923000000000";
-        const photoUrl = p.photo || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400";
-
-        return `
-          <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm space-y-3">
-            <div class="flex gap-3">
-              <img src="${photoUrl}" class="w-20 h-20 rounded-2xl object-cover shadow-sm">
-              <div class="flex-grow space-y-1">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <h3 class="font-extrabold text-slate-900 text-sm leading-tight">${p.name}</h3>
-                    <p class="text-[11px] text-emerald-800 font-bold">${p.city} <span class="text-slate-400 font-normal">(${p.society})</span></p>
-                  </div>
-                  <button onclick="toggleSave('${p.id}')" class="text-base ${isSaved ? 'text-emerald-600' : 'text-slate-300'}">
-                    <i class="${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
-                  </button>
+    <div class="container">
+        
+        <!-- === ADMIN ADD PROFILE FORM === -->
+        <div id="admin-panel" class="admin-panel">
+            <h2>Add New Profile & Photo</h2>
+            <form id="add-profile-form" onsubmit="window.addProfile(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="p-name" required placeholder="e.g. Ahmed Khan">
                 </div>
-                <p class="text-[11px] font-semibold text-slate-700">${p.profession} · ${p.age}</p>
-              </div>
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" id="p-age" required placeholder="e.g. 28">
+                </div>
+                <div class="form-group">
+                    <label>City / Location (for Map)</label>
+                    <input type="text" id="p-city" required placeholder="e.g. Riyadh, Saudi Arabia">
+                </div>
+                <div class="form-group">
+                    <label>Profession</label>
+                    <input type="text" id="p-profession" required placeholder="e.g. Software Engineer">
+                </div>
+                <div class="form-group">
+                    <label>Caste / Sect</label>
+                    <input type="text" id="p-caste" placeholder="e.g. Sunni / Syed">
+                </div>
+                <div class="form-group">
+                    <label>Upload Photo from Device</label>
+                    <input type="file" id="p-image" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label>Additional Details</label>
+                    <textarea id="p-details" rows="3" placeholder="Family background, requirements, etc."></textarea>
+                </div>
+                <button type="submit" class="btn-submit">➕ Save Profile to Database</button>
+            </form>
+        </div>
+
+        <!-- === PROFILES GRID === -->
+        <div id="profiles-container" class="profiles-grid">
+            <div class="loading-text">Loading profiles from live database...</div>
+        </div>
+    </div>
+
+    <!-- === INTERACTIVE MAP MODAL WITH CROSS BUTTON === -->
+    <div id="map-modal" class="map-modal">
+        <div class="map-modal-content">
+            <button class="close-map-btn" onclick="window.closeMapModal()">✕</button>
+            <h3 id="map-modal-title" style="margin-top:0; color:#0056b3;">Location Map</h3>
+            <p id="map-modal-subtitle" style="font-size:14px; color:#555;"></p>
+            <div class="map-container" id="map-frame-container">
+                <!-- Embedded OpenStreetMap iframe loaded dynamically -->
+                <p>Loading interactive map...</p>
             </div>
+        </div>
+    </div>
 
-            <p class="text-[11px] text-slate-500 italic bg-slate-50 p-2 rounded-xl">"${p.bio}"</p>
+    <!-- MAIN FIREBASE & LOGIC SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, set, remove } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
-            <div class="flex items-center justify-between pt-1 border-t border-slate-50 gap-2">
-              <span class="bg-emerald-50 text-emerald-700 text-[9px] font-extrabold px-2.5 py-1 rounded-lg">${p.education}</span>
-              <div class="flex items-center gap-1.5">
-                ${isAdmin ? `
-                  <button onclick="openEditProposalModal('${p.id}')" class="bg-amber-100 text-amber-800 font-bold text-[10px] px-2.5 py-1.5 rounded-xl"><i class="fa-solid fa-pen"></i></button>
-                  <button onclick="deleteProposal('${p.id}')" class="bg-rose-100 text-rose-700 font-bold text-[10px] px-2.5 py-1.5 rounded-xl"><i class="fa-solid fa-trash"></i></button>
-                ` : ''}
-                <a href="https://wa.me/${waNum}?text=Salam,%20I%20am%20interested%20in%20the%20proposal%20for%20${encodeURIComponent(p.name)}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-xl shadow-sm transition">
-                  <i class="fa-brands fa-whatsapp me-1"></i> Contact
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
+        // ==========================================
+        // 1. CONFIGURATIONS
+        // ==========================================
+        emailjs.init("aACAqlnWlWDvJoVZU");
 
-    function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
-      document.getElementById(id).classList.add('flex');
-    }
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTDGpkFur9meJjk72LNXFr1CC_xiYEU3Q",
+            authDomain: "rishtaportal-b9eac.firebaseapp.com",
+            databaseURL: "https://rishtaportal-b9eac-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "rishtaportal-b9eac",
+            storageBucket: "rishtaportal-b9eac.appspot.com",
+            messagingSenderId: "993752158483",
+            appId: "1:993752158483:web:f44899225cf0d7acb40ae6"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const profilesRef = ref(db, 'proposals');
 
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-      document.getElementById(id).classList.remove('flex');
-    }
+        let isAdmin = false;
+        let globalProfilesData = [];
 
-    function toggleSave(id) {
-      const idx = savedProfiles.findIndex(sp => sp.id === id);
-      if (idx > -1) savedProfiles.splice(idx, 1);
-      else {
-        const item = proposals.find(p => p.id === id);
-        if (item) savedProfiles.push(item);
-      }
-      localStorage.setItem('rp_saved', JSON.stringify(savedProfiles));
-      document.getElementById('savedBadge').innerText = savedProfiles.length;
-      renderCards();
-    }
+        // ==========================================
+        // 2. ADMIN LOGIN & DELETE LOGIC
+        // ==========================================
+        window.adminLogin = function() {
+            const pass = prompt("Enter Admin Password:");
+            if (pass === "admin123") {
+                isAdmin = true;
+                alert("Admin Access Granted!");
+                document.getElementById('admin-panel').style.display = 'block';
+                renderProfiles(globalProfilesData);
+            } else {
+                alert("Incorrect password.");
+            }
+        };
 
-    function checkAdminState() {
-      if (isAdmin) {
-        document.getElementById('adminLoginForm').classList.add('hidden');
-        document.getElementById('adminControls').classList.remove('hidden');
-      } else {
-        document.getElementById('adminLoginForm').classList.remove('hidden');
-        document.getElementById('adminControls').classList.add('hidden');
-      }
-    }
+        // ==========================================
+        // 3. IMAGE COMPRESSOR & ADD PROFILE
+        // ==========================================
+        window.addProfile = function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('p-image');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert("Please select an image file.");
+                return;
+            }
 
-    function handleAdminLogin(e) {
-      e.preventDefault();
-      const enteredUser = document.getElementById('adminUser').value;
-      const enteredPass = document.getElementById('adminPass').value;
+            // Read file and compress via Canvas to fit safely in Firebase
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600;
+                    const MAX_HEIGHT = 600;
+                    let width = img.width;
+                    let height = img.height;
 
-      if (enteredUser === "Naseem" && enteredPass === "XXXNASEEXXXRISHTAXXX2000XXX") {
-        isAdmin = true;
-        sessionStorage.setItem('rp_admin_logged', 'true');
-        checkAdminState();
-        renderCards();
-      } else {
-        document.getElementById('loginError').classList.remove('hidden');
-      }
-    }
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
 
-    function handleAdminLogout() {
-      isAdmin = false;
-      sessionStorage.removeItem('rp_admin_logged');
-      checkAdminState();
-      closeModal('loginModal');
-      renderCards();
-    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
-    function openAddProposalModal() {
-      closeModal('loginModal');
-      document.getElementById('formTitle').innerText = "Add Proposal";
-      document.getElementById('editingProposalId').value = "";
-      document.getElementById('fieldName').value = "";
-      document.getElementById('fieldAge').value = "";
-      document.getElementById('fieldHeight').value = "";
-      document.getElementById('fieldCity').value = "";
-      document.getElementById('fieldSociety').value = "";
-      document.getElementById('fieldEducation').value = "";
-      document.getElementById('fieldProfession').value = "";
-      document.getElementById('fieldWhatsapp').value = "";
-      document.getElementById('fieldPhoto').value = "";
-      document.getElementById('fieldBio').value = "";
-      document.getElementById('deleteFormBtn').classList.add('hidden');
-      openModal('proposalFormModal');
-      setTimeout(() => { initPickerMap(); pickerMap.invalidateSize(); }, 300);
-    }
+                    const newProfile = {
+                        name: document.getElementById('p-name').value,
+                        age: document.getElementById('p-age').value,
+                        city: document.getElementById('p-city').value,
+                        profession: document.getElementById('p-profession').value,
+                        caste: document.getElementById('p-caste').value,
+                        details: document.getElementById('p-details').value,
+                        image: compressedBase64,
+                        timestamp: Date.now()
+                    };
 
-    function openEditProposalModal(id) {
-      const item = proposals.find(p => p.id === id);
-      if (!item) return;
+                    const newProfileRef = push(profilesRef);
+                    set(newProfileRef, newProfile)
+                        .then(() => {
+                            alert("Profile & Image Added Successfully!");
+                            document.getElementById('add-profile-form').reset();
+                        })
+                        .catch((error) => alert("Error: " + error.message));
+                };
+            };
+            reader.readAsDataURL(file);
+        };
 
-      document.getElementById('formTitle').innerText = "Edit Proposal";
-      document.getElementById('editingProposalId').value = item.id;
-      document.getElementById('fieldName').value = item.name;
-      document.getElementById('fieldAge').value = item.age || "";
-      document.getElementById('fieldHeight').value = item.height || "";
-      document.getElementById('fieldCity').value = item.city;
-      document.getElementById('fieldSociety').value = item.society;
-      document.getElementById('fieldEducation').value = item.education || "";
-      document.getElementById('fieldProfession').value = item.profession || "";
-      document.getElementById('fieldCategory').value = item.category || "Professional";
-      document.getElementById('fieldWhatsapp').value = item.whatsapp || "";
-      document.getElementById('fieldPhoto').value = item.photo || "";
-      document.getElementById('fieldBio').value = item.bio;
-      document.getElementById('deleteFormBtn').classList.remove('hidden');
+        window.deleteProfile = function(profileId) {
+            if(confirm("Are you sure you want to completely DELETE this profile?")) {
+                remove(ref(db, 'proposals/' + profileId))
+                    .then(() => alert("Profile deleted."))
+                    .catch((err) => alert("Failed: " + err.message));
+            }
+        };
 
-      openModal('proposalFormModal');
-      setTimeout(() => { 
-        initPickerMap(); 
-        pickerMap.invalidateSize(); 
-        setPickerLocation(item.lat || 31.5204, item.lng || 74.3587, 14);
-      }, 300);
-    }
+        // ==========================================
+        // 4. INTERACTIVE MAP MODAL LOGIC (WITH CROSS BUTTON)
+        // ==========================================
+        window.openMapModal = function(cityName, personName) {
+            document.getElementById('map-modal-title').innerText = `Location: ${cityName}`;
+            document.getElementById('map-modal-subtitle').innerText = `Showing registered location for ${personName}`;
+            
+            const frameContainer = document.getElementById('map-frame-container');
+            // Use OpenStreetMap embed cleanly without requiring API keys
+            const encodedCity = encodeURIComponent(cityName);
+            frameContainer.innerHTML = `<iframe width="100%" height="100%" style="border:0;" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=34.0%2C12.0%2C55.0%2C33.0&layer=mapnik&marker=${encodedCity}"></iframe>`;
+            
+            document.getElementById('map-modal').style.display = 'flex';
+        };
 
-    function deleteProposal(id) {
-      if (!isAdmin) return;
-      if (confirm("Permanently delete this proposal for ALL visitors?")) {
-        syncDeleteProposalFromCloud(id);
-      }
-    }
+        window.closeMapModal = function() {
+            document.getElementById('map-modal').style.display = 'none';
+            document.getElementById('map-frame-container').innerHTML = ''; // Clear iframe
+        };
 
-    function deleteCurrentProposalFromForm() {
-      const id = document.getElementById('editingProposalId').value;
-      if (id) {
-        deleteProposal(id);
-        closeModal('proposalFormModal');
-      }
-    }
+        // Close modal if user clicks outside the modal content box
+        window.onclick = function(event) {
+            const modal = document.getElementById('map-modal');
+            if (event.target === modal) {
+                window.closeMapModal();
+            }
+        };
 
-    function saveProposal(e) {
-      e.preventDefault();
-      const editId = document.getElementById('editingProposalId').value;
-      const id = editId || "p_" + Date.now();
+        // ==========================================
+        // 5. SHARE & REPORT LOGIC
+        // ==========================================
+        window.shareProfile = async function(name, age, profession, city) {
+            const shareText = `Check out this Rishta Profile:\n\nName: ${name}\nAge:${age}\nProfession: ${profession}\nLocation:${city}\n\nView more on our Rishta Portal:`;
+            const shareUrl = window.location.href;
 
-      const newProposal = {
-        id: id,
-        name: document.getElementById('fieldName').value,
-        age: document.getElementById('fieldAge').value,
-        height: document.getElementById('fieldHeight').value,
-        city: document.getElementById('fieldCity').value,
-        society: document.getElementById('fieldSociety').value,
-        education: document.getElementById('fieldEducation').value,
-        profession: document.getElementById('fieldProfession').value,
-        category: document.getElementById('fieldCategory').value,
-        whatsapp: document.getElementById('fieldWhatsapp').value || "923000000000",
-        photo: document.getElementById('fieldPhoto').value || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
-        bio: document.getElementById('fieldBio').value,
-        lat: parseFloat(document.getElementById('fieldLat').value) || 31.5204,
-        lng: parseFloat(document.getElementById('fieldLng').value) || 31.5204
-      };
+            if (navigator.share) {
+                try { await navigator.share({ title: `Rishta Profile: ${name}`, text: shareText, url: shareUrl }); } 
+                catch (err) { console.error('Error sharing:', err); }
+            } else {
+                const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + "\n" + shareUrl)}`;
+                window.open(waUrl, '_blank');
+            }
+        };
 
-      syncSaveProposalToCloud(newProposal);
-      closeModal('proposalFormModal');
-    }
+        window.reportProfile = function(profileId, profileName) {
+            const reason = prompt(`Why are you reporting the profile for ${profileName}? \n(e.g., Fake profile, Inappropriate content)`);
+            if (!reason) return; 
 
-    // HANDLES EMAILJS ALERT SUBSCRIPTION WITH YOUR CREDENTIALS
-    function handleCitySubscribe(e) {
-      e.preventDefault();
-      
-      const submitBtn = document.getElementById('subSubmitBtn');
-      const emailVal = document.getElementById('subEmail').value;
-      const cityVal = document.getElementById('subCity').value;
+            const templateParams = {
+                reported_profile_id: profileId,
+                reported_profile_name: profileName,
+                report_reason: reason,
+                portal_url: window.location.href
+            };
 
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Subscribing...";
+            emailjs.send('service_yzk2m6f', 'template_i9nwegh', templateParams)
+                .then(() => alert('Report submitted successfully. The admin will review it.'))
+                .catch(() => alert('Failed to send report. Please try again.'));
+        };
 
-      // Service ID: service_yzk2m6f, Template ID: template_i9nwegh
-      emailjs.send("service_yzk2m6f", "template_i9nwegh", {
-        email: emailVal,
-        city: cityVal
-      }).then(function(response) {
-        document.getElementById('subSuccess').classList.remove('hidden');
-        document.getElementById('subError').classList.add('hidden');
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Subscribe";
-        setTimeout(() => {
-          closeModal('subscribeModal');
-          document.getElementById('subSuccess').classList.add('hidden');
-        }, 2000);
-      }, function(error) {
-        console.error('EmailJS Error:', error);
-        document.getElementById('subError').classList.remove('hidden');
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Subscribe";
-      });
-    }
+        // ==========================================
+        // 6. RENDER PROFILES TO UI
+        // ==========================================
+        function renderProfiles(profilesArray) {
+            const container = document.getElementById('profiles-container');
+            container.innerHTML = ''; 
 
-    function scrollToTop() {
-      const mainScroll = document.getElementById('mainScrollArea');
-      if (mainScroll) {
-        mainScroll.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
+            if (profilesArray.length === 0) {
+                container.innerHTML = '<div class="loading-text">No profiles available yet.</div>';
+                return;
+            }
 
-    function initScrollNavListener() {
-      const mainScroll = document.getElementById('mainScrollArea');
-      const bottomNav = document.getElementById('bottomNav');
+            profilesArray.forEach(profile => {
+                const card = document.createElement('div');
+                card.className = 'profile-card';
+                
+                const deleteBtnHTML = isAdmin 
+                    ? `<button class="btn-delete" style="display:block;" onclick="window.deleteProfile('${profile.id}')">🗑️ Delete Profile</button>` 
+                    : ``;
 
-      if (!mainScroll || !bottomNav) return;
+                const imgSrc = profile.image || 'https://via.placeholder.com/300x200?text=No+Photo';
 
-      mainScroll.addEventListener('scroll', () => {
-        if (mainScroll.scrollTop > 0) {
-          bottomNav.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
-          bottomNav.classList.remove('translate-y-0', 'opacity-100');
-        } else {
-          bottomNav.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
-          bottomNav.classList.add('translate-y-0', 'opacity-100');
+                card.innerHTML = `
+                    <div>
+                        <img src="${imgSrc}" class="profile-img" alt="Profile Image">
+                        <h3>${profile.name || 'No Name'}</h3>
+                        <p><strong>Age:</strong> ${profile.age || 'N/A'}</p>
+                        <p><strong>City:</strong> ${profile.city || 'N/A'}</p>
+                        <p><strong>Profession:</strong> ${profile.profession || 'N/A'}</p>
+                        <p><strong>Caste/Sect:</strong> ${profile.caste || 'N/A'}</p>
+                        <p><strong>Details:</strong> ${profile.details || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <button class="btn-map" onclick="window.openMapModal('${profile.city || 'Riyadh'}', '${profile.name}')">📍 View Location Map</button>
+                        <div class="card-actions">
+                            <button class="btn-share" onclick="window.shareProfile('${profile.name}', '${profile.age}', '${profile.profession}', '${profile.city}')">📲 Share</button>
+                            <button class="btn-report" onclick="window.reportProfile('${profile.id}', '${profile.name}')">⚠️ Report</button>
+                        </div>
+                        ${deleteBtnHTML}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
-      });
-    }
 
-    window.onload = function() {
-      checkAdminState();
-      initMap();
-      renderCityPills();
-      renderCards();
-      document.getElementById('savedBadge').innerText = savedProfiles.length;
-      initRealtimeSync();
-      initScrollNavListener();
-    };
-  </script>
+        // ==========================================
+        // 7. LIVE FIREBASE LISTENER
+        // ==========================================
+        onValue(profilesRef, (snapshot) => {
+            const data = snapshot.val();
+            const profilesArray = [];
+            
+            if (data) {
+                for (let id in data) {
+                    profilesArray.push({ id: id, ...data[id] });
+                }
+            }
+            globalProfilesData = profilesArray.reverse(); 
+            renderProfiles(globalProfilesData);
+        });
+
+    </script>
 </body>
 </html>
