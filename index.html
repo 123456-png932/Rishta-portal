@@ -3,156 +3,523 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rishta Portal - Trusted Matrimonial Service</title>
+    <title>Rishta Portal - Premium Matchmaking</title>
     
-    <meta property="og:title" content="Rishta Portal - Trusted Matchmaking">
-    <meta property="og:description" content="Find the perfect match for you or your family members.">
+    <!-- Fonts and Icons to match the premium design -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    
+
     <style>
-        /* === Classic Matrimonial Theme & Styles === */
+        /* ==========================================================================
+           1. GLOBAL VARIABLES & RESET
+           ========================================================================== */
         :root {
-            --primary-color: #8b0000; /* Deep Maroon / Rishta Theme */
-            --secondary-color: #d4af37; /* Gold Accent */
-            --bg-color: #fcfbfa;
-            --card-bg: #ffffff;
-            --text-color: #2c3e50;
+            --bg-main: #f4f7f8;
+            --white: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-gray: #6b7280;
+            --text-light-gray: #9ca3af;
+            
+            /* Theme Colors based on user design */
+            --green-primary: #059669; /* Contact button green */
+            --green-light: #d1fae5;
+            --green-text: #047857;
+            
+            --blue-dark: #1e293b; /* Details button / All matches tab */
+            --blue-light: #f1f5f9;
+            
+            --yellow-light: #fef3c7;
+            --yellow-text: #b45309;
+            
+            --red-light: #fee2e2;
+            --red-text: #b91c1c;
+            
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-pill: 9999px;
         }
 
-        body { font-family: 'Georgia', serif; background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-color); }
-        
-        /* Header Banner */
-        header { background: linear-gradient(135deg, var(--primary-color), #5c0000); color: white; text-align: center; padding: 2.5rem 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: relative; border-bottom: 4px solid var(--secondary-color); }
-        header h1 { margin: 0; font-size: 32px; font-family: 'Times New Roman', serif; letter-spacing: 1px; }
-        header p { margin: 10px 0 0; font-size: 16px; opacity: 0.9; font-style: italic; }
-        
-        .admin-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); color: white; border: 1px solid var(--secondary-color); padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; font-family: sans-serif; transition: 0.3s; }
-        .admin-btn:hover { background: var(--secondary-color); color: #000; font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
 
-        /* Main Container & Search Filter */
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        .search-bar-container { display: flex; justify-content: center; margin-bottom: 30px; }
-        .search-input { width: 100%; max-width: 600px; padding: 12px 20px; font-size: 16px; border: 2px solid #ddd; border-radius: 30px; outline: none; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .search-input:focus { border-color: var(--primary-color); }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
 
-        /* Profiles Grid */
-        .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-        .profile-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.06); border: 1px solid #eaeaea; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
-        .profile-card:hover { transform: translateY(-3px); }
-        
-        .profile-img { width: 100%; height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; background: #f9f9f9; }
-        .profile-card h3 { margin: 0 0 12px 0; color: var(--primary-color); font-size: 22px; font-family: 'Georgia', serif; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
-        .profile-card p { margin: 6px 0; font-size: 14px; color: #444; }
-        .profile-card strong { color: #111; }
-        
-        /* Action Buttons */
-        .card-actions { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-        .btn-share { flex: 1; background-color: #25D366; color: white; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-report { flex: 1; background-color: #fff; color: #d9534f; border: 1px solid #d9534f; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-map { background-color: #20b2aa; color: white; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; width: 100%; margin-top: 8px; }
-        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-top: 10px; display: none; }
-        
-        /* Admin Panel Styles */
-        .admin-panel { display: none; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .admin-panel h2 { margin-top: 0; color: var(--primary-color); font-family: 'Georgia', serif; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        .btn-submit { background-color: var(--primary-color); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: 0.3s; }
-        .btn-submit:hover { background-color: #600; }
-        
-        /* Interactive Map Modal with Classic Styling & Cross Button */
-        .map-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 1000; justify-content: center; align-items: center; }
-        .map-modal-content { background: white; width: 90%; max-width: 650px; padding: 25px; border-radius: 12px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-        .close-map-btn { position: absolute; top: 15px; right: 15px; background: #dc3545; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 1010; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .close-map-btn:hover { background: #b02a37; }
-        .map-container { width: 100%; height: 350px; background: #eee; border-radius: 8px; margin-top: 15px; border: 1px solid #ccc; overflow: hidden; display: flex; justify-content: center; align-items: center; color: #666; }
+        /* ==========================================================================
+           2. LAYOUT & HEADER
+           ========================================================================== */
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-        .loading-text { text-align: center; font-size: 18px; color: #666; grid-column: 1 / -1; padding: 40px; }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--blue-dark);
+        }
+
+        .admin-toggle-btn {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-gray);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .admin-toggle-btn:hover {
+            border-color: var(--blue-dark);
+            color: var(--blue-dark);
+        }
+
+        /* ==========================================================================
+           3. CATEGORY TABS (Scrollable)
+           ========================================================================== */
+        .category-tabs {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .category-tabs::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .tab-btn {
+            background-color: var(--blue-light);
+            color: var(--text-gray);
+            border: none;
+            padding: 10px 24px;
+            border-radius: var(--radius-pill);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background-color: var(--blue-dark);
+            color: var(--white);
+        }
+
+        /* ==========================================================================
+           4. CARD DESIGN (White and Green Theme)
+           ========================================================================== */
+        .profiles-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .profile-card {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .bookmark-icon {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: var(--text-light-gray);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Card Header (Image + Info) */
+        .card-header {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .profile-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            background-color: var(--border-color);
+        }
+
+        .profile-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--blue-dark);
+            margin-bottom: 4px;
+        }
+
+        .profile-location {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pin-icon {
+            color: var(--green-primary);
+        }
+
+        .location-bold {
+            font-weight: 600;
+            color: var(--green-primary);
+        }
+
+        .profile-stats {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 4px;
+        }
+
+        .profile-profession {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        /* Card Quote Box */
+        .quote-box {
+            background-color: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: var(--text-gray);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Card Action Buttons Area */
+        .card-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .actions-left, .actions-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Specific Pill Buttons */
+        .btn-pill {
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-pill:hover { opacity: 0.9; }
+
+        .tag-profession {
+            background-color: var(--green-light);
+            color: var(--green-text);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-edit { background-color: var(--yellow-light); color: var(--yellow-text); }
+        .btn-delete { background-color: var(--red-light); color: var(--red-text); padding: 8px 12px; }
+        
+        .btn-contact { background-color: var(--green-primary); color: var(--white); }
+        .btn-details { background-color: var(--blue-dark); color: var(--white); }
+        .btn-map-full { background-color: var(--green-light); color: var(--green-text); width: 100%; justify-content: center; margin-top: 10px; }
+
+        /* ==========================================================================
+           5. ADMIN PANEL & FORMS
+           ========================================================================== */
+        .admin-section {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .admin-section h2 {
+            margin-bottom: 20px;
+            color: var(--blue-dark);
+            font-size: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--green-primary);
+        }
+
+        .btn-submit-large {
+            background-color: var(--blue-dark);
+            color: var(--white);
+            border: none;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* ==========================================================================
+           6. INTERACTIVE MAP MODAL (WITH CROSS BUTTON)
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            position: relative;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* The specific Cross Button you requested */
+        .btn-close-cross {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background-color: var(--red-light);
+            color: var(--red-text);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-close-cross:hover {
+            background-color: #fecaca;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--blue-dark);
+            margin-bottom: 8px;
+            padding-right: 40px; /* Space for cross */
+        }
+
+        .modal-subtitle {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 16px;
+        }
+
+        .map-frame-wrapper {
+            width: 100%;
+            height: 350px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background-color: var(--border-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-gray);
+            font-size: 16px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .card-actions { flex-direction: column; align-items: stretch; }
+            .actions-left, .actions-right { justify-content: space-between; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Rishta Portal</h1>
-        <p>A trusted bridge for sacred matrimonial alliances.</p>
-        <button class="admin-btn" onclick="window.adminLogin()">Admin Access</button>
-    </header>
-
-    <div class="container">
+    <div class="app-container">
         
-        <!-- SEARCH & FILTER BAR -->
-        <div class="search-bar-container">
-            <input type="text" id="search-input" class="search-input" placeholder="🔍 Search profiles by name, city, profession, or caste..." oninput="window.filterProfiles()">
+        <!-- Header Section -->
+        <header class="header-top">
+            <div class="header-title">Find Matches</div>
+            <button class="admin-toggle-btn" onclick="app.toggleAdmin()">Admin Login</button>
+        </header>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+            <button class="tab-btn active" onclick="app.filterCategory('all', this)">All Matches</button>
+            <button class="tab-btn" onclick="app.filterCategory('educated', this)">Educated</button>
+            <button class="tab-btn" onclick="app.filterCategory('professional', this)">Professional</button>
+            <button class="tab-btn" onclick="app.filterCategory('business', this)">Business</button>
         </div>
 
-        <!-- === ADMIN ADD PROFILE FORM === -->
-        <div id="admin-panel" class="admin-panel">
-            <h2>Add New Rishta Profile & Photo</h2>
-            <form id="add-profile-form" onsubmit="window.addProfile(event)">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="p-name" required placeholder="e.g. Ahmed Khan">
+        <!-- Admin Control Panel (Hidden by default) -->
+        <section id="admin-panel" class="admin-section">
+            <h2><i class="fas fa-shield-alt"></i> Admin Control Center</h2>
+            <form id="add-profile-form" onsubmit="app.submitNewProfile(event)">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Upload Profile Photo</label>
+                        <input type="file" id="input-image" class="form-input" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="input-name" class="form-input" placeholder="e.g. Junaid Ahmed" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">City & Area</label>
+                        <input type="text" id="input-city" class="form-input" placeholder="e.g. Lahore (DHA phase 8)" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Age & Height Stats</label>
+                        <input type="text" id="input-stats" class="form-input" placeholder="e.g. 26 • 5'9" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Profession / Status</label>
+                        <input type="text" id="input-profession" class="form-input" placeholder="e.g. Unemployed / Engineer" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Bio / Quote</label>
+                        <textarea id="input-quote" class="form-input" rows="3" placeholder="Enter their bio or quote here..."></textarea>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Age</label>
-                    <input type="number" id="p-age" required placeholder="e.g. 28">
-                </div>
-                <div class="form-group">
-                    <label>City / Location (for Map)</label>
-                    <input type="text" id="p-city" required placeholder="e.g. Riyadh, Saudi Arabia">
-                </div>
-                <div class="form-group">
-                    <label>Profession</label>
-                    <input type="text" id="p-profession" required placeholder="e.g. Software Engineer">
-                </div>
-                <div class="form-group">
-                    <label>Caste / Sect</label>
-                    <input type="text" id="p-caste" placeholder="e.g. Sunni / Syed">
-                </div>
-                <div class="form-group">
-                    <label>Upload Photo from Device</label>
-                    <input type="file" id="p-image" accept="image/*" required>
-                </div>
-                <div class="form-group">
-                    <label>Additional Details</label>
-                    <textarea id="p-details" rows="3" placeholder="Family background, education, requirements, etc."></textarea>
-                </div>
-                <button type="submit" class="btn-submit">➕ Save Profile to Database</button>
+                <button type="submit" class="btn-submit-large">Publish Profile</button>
             </form>
-        </div>
+        </section>
 
-        <!-- === PROFILES GRID === -->
-        <div id="profiles-container" class="profiles-grid">
-            <div class="loading-text">Loading profiles from live database...</div>
-        </div>
+        <!-- Profiles Feed Container -->
+        <main id="profiles-container" class="profiles-feed">
+            <div class="empty-state">Loading matches from database...</div>
+        </main>
+
     </div>
 
-    <!-- === INTERACTIVE MAP MODAL WITH CROSS BUTTON === -->
-    <div id="map-modal" class="map-modal">
-        <div class="map-modal-content">
-            <button class="close-map-btn" onclick="window.closeMapModal()">✕</button>
-            <h3 id="map-modal-title" style="margin-top:0; color:var(--primary-color); font-family:'Georgia',serif;">Location Map</h3>
-            <p id="map-modal-subtitle" style="font-size:14px; color:#555; margin-bottom:10px;"></p>
-            <div class="map-container" id="map-frame-container">
-                <p>Loading interactive map...</p>
+    <!-- Interactive Map Modal -->
+    <div id="location-modal" class="modal-overlay">
+        <div class="modal-content">
+            <!-- The specific cross button for safe exit -->
+            <button class="btn-close-cross" onclick="app.closeMapModal()">✕</button>
+            
+            <h3 class="modal-title" id="map-title">Location Map</h3>
+            <p class="modal-subtitle" id="map-subtitle">Loading data...</p>
+            
+            <div class="map-frame-wrapper" id="map-frame-container">
+                <!-- Iframe injected via JS -->
             </div>
         </div>
     </div>
 
-    <!-- MAIN FIREBASE & LOGIC SCRIPT -->
+    <!-- ==========================================================================
+         JAVASCRIPT LOGIC & FIREBASE INTEGRATION
+         ========================================================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getDatabase, ref, onValue, push, set, remove } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
-        // ==========================================
-        // 1. CONFIGURATIONS
-        // ==========================================
+        // Initialize EmailJS for reporting
         emailjs.init("aACAqlnWlWDvJoVZU");
 
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBTDGpkFur9meJjk72LNXFr1CC_xiYEU3Q",
             authDomain: "rishtaportal-b9eac.firebaseapp.com",
@@ -163,226 +530,267 @@
             appId: "1:993752158483:web:f44899225cf0d7acb40ae6"
         };
         
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const profilesRef = ref(db, 'proposals');
+        const firebaseApp = initializeApp(firebaseConfig);
+        const database = getDatabase(firebaseApp);
+        const databaseRef = ref(database, 'proposals_premium');
 
-        let isAdmin = false;
-        let globalProfilesData = [];
+        // Main Application Architecture
+        window.app = {
+            isAdminActive: false,
+            profilesData: [],
+            currentFilter: 'all',
 
-        // ==========================================
-        // 2. ADMIN LOGIN & DELETE LOGIC
-        // ==========================================
-        window.adminLogin = function() {
-            const pass = prompt("Enter Admin Password:");
-            if (pass === "admin123") {
-                isAdmin = true;
-                alert("Admin Access Granted!");
-                document.getElementById('admin-panel').style.display = 'block';
-                renderProfiles(globalProfilesData);
-            } else {
-                alert("Incorrect password.");
-            }
-        };
+            // 1. Admin Authentication
+            toggleAdmin: function() {
+                if (this.isAdminActive) {
+                    this.isAdminActive = false;
+                    document.getElementById('admin-panel').style.display = 'none';
+                    this.renderProfiles();
+                    alert("Logged out of admin mode.");
+                    return;
+                }
 
-        // ==========================================
-        // 3. IMAGE COMPRESSOR & ADD PROFILE
-        // ==========================================
-        window.addProfile = function(e) {
-            e.preventDefault();
-            
-            const fileInput = document.getElementById('p-image');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                alert("Please select an image file.");
-                return;
-            }
+                const password = prompt("Enter Admin Password:");
+                if (password === "admin123") {
+                    this.isAdminActive = true;
+                    document.getElementById('admin-panel').style.display = 'block';
+                    this.renderProfiles();
+                } else if (password !== null) {
+                    alert("Incorrect authorization.");
+                }
+            },
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600;
-                    const MAX_HEIGHT = 600;
-                    let width = img.width;
-                    let height = img.height;
+            // 2. Add New Profile with Image Compression
+            submitNewProfile: function(event) {
+                event.preventDefault();
+                
+                const fileInput = document.getElementById('input-image');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    alert("Please select a profile photo.");
+                    return;
+                }
 
-                    if (width > height) {
-                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        // Canvas logic to safely compress image for Firebase Storage limits
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 500;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height && width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        } else if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const base64Image = canvas.toDataURL('image/jpeg', 0.6);
+
+                        const profileObject = {
+                            name: document.getElementById('input-name').value,
+                            city: document.getElementById('input-city').value,
+                            stats: document.getElementById('input-stats').value,
+                            profession: document.getElementById('input-profession').value,
+                            quote: document.getElementById('input-quote').value,
+                            image: base64Image,
+                            timestamp: Date.now()
+                        };
+
+                        const newRef = push(databaseRef);
+                        set(newRef, profileObject)
+                            .then(() => {
+                                alert("Profile published successfully!");
+                                document.getElementById('add-profile-form').reset();
+                            })
+                            .catch((err) => alert("Error saving: " + err.message));
+                    };
+                };
+                reader.readAsDataURL(file);
+            },
+
+            // 3. Delete Profile
+            deleteProfile: function(id) {
+                if(confirm("Permanently delete this profile from the database?")) {
+                    remove(ref(database, 'proposals_premium/' + id))
+                        .catch((err) => alert("Failed to delete: " + err.message));
+                }
+            },
+
+            // 4. Interactive Map Modal with Cross Close Logic
+            openMapModal: function(city, name) {
+                document.getElementById('map-title').innerText = `Location: ${city}`;
+                document.getElementById('map-subtitle').innerText = `Registered area for ${name}`;
+                
+                const frameContainer = document.getElementById('map-frame-container');
+                const cleanCity = encodeURIComponent(city.split('(')[0].trim()); // Clean city name for better mapping
+                
+                frameContainer.innerHTML = `<iframe width="100%" height="100%" style="border:0;" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=34.0%2C12.0%2C55.0%2C33.0&layer=mapnik&marker=${cleanCity}"></iframe>`;
+                
+                document.getElementById('location-modal').style.display = 'flex';
+            },
+
+            closeMapModal: function() {
+                document.getElementById('location-modal').style.display = 'none';
+                document.getElementById('map-frame-container').innerHTML = ''; // Clear iframe to stop loading
+            },
+
+            // 5. Sharing via WhatsApp & Native
+            contactProfile: async function(name, profession, city) {
+                const message = `Hi! I found the profile for ${name} (${profession}) from ${city} on the Matchmaking Portal and would like to connect.`;
+                const url = window.location.href;
+
+                if (navigator.share) {
+                    try { await navigator.share({ title: `Profile: ${name}`, text: message, url: url }); } 
+                    catch (err) { console.log('Share cancelled.'); }
+                } else {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message + "\n" + url)}`, '_blank');
+                }
+            },
+
+            // 6. Report Profile via EmailJS
+            reportProfile: function(id, name) {
+                const reason = prompt(`Submit a report for ${name}. Reason (e.g., Fake, Inappropriate):`);
+                if (!reason) return;
+
+                emailjs.send('service_yzk2m6f', 'template_i9nwegh', {
+                    reported_profile_id: id,
+                    reported_profile_name: name,
+                    report_reason: reason,
+                    portal_url: window.location.href
+                }).then(() => alert('Report filed successfully.'))
+                  .catch(() => alert('Error sending report.'));
+            },
+
+            // 7. Category Tab Filtering
+            filterCategory: function(category, btnElement) {
+                this.currentFilter = category;
+                
+                // Update active tab styling
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+                
+                this.renderProfiles();
+            },
+
+            // 8. Render Engine (Matches the screenshot design exactly)
+            renderProfiles: function() {
+                const container = document.getElementById('profiles-container');
+                container.innerHTML = '';
+
+                // Apply filtering logic based on tabs
+                let displayData = this.profilesData;
+                if (this.currentFilter !== 'all') {
+                    displayData = this.profilesData.filter(p => {
+                        const prof = (p.profession || '').toLowerCase();
+                        if (this.currentFilter === 'educated') return prof.includes('engineer') || prof.includes('doctor') || prof.includes('teacher');
+                        if (this.currentFilter === 'professional') return prof.includes('manager') || prof.includes('professional');
+                        if (this.currentFilter === 'business') return prof.includes('business');
+                        return true;
+                    });
+                }
+
+                if (displayData.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No profiles found in this category.</div>';
+                    return;
+                }
+
+                displayData.forEach(profile => {
+                    const card = document.createElement('div');
+                    card.className = 'profile-card';
+                    
+                    // Parse location text to style the city part green, and area gray (like in screenshot)
+                    let cityHTML = profile.city || 'Unknown';
+                    if (cityHTML.includes('(')) {
+                        const parts = cityHTML.split('(');
+                        cityHTML = `<span class="location-bold">${parts[0].trim()}</span> <span style="color:var(--text-light-gray)">(${parts[1]}</span>`;
                     } else {
-                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        cityHTML = `<span class="location-bold">${cityHTML}</span>`;
                     }
 
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    // Truncate profession for the small tag if it's too long
+                    const shortProf = (profile.profession || 'Unknown').split(' ')[0] + '...';
                     
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    // Admin buttons injection
+                    const adminButtons = this.isAdminActive ? `
+                        <button class="btn-pill btn-edit"><i class="fas fa-pen"></i> Edit</button>
+                        <button class="btn-pill btn-delete" onclick="app.deleteProfile('${profile.id}')"><i class="fas fa-trash"></i></button>
+                    ` : '';
 
-                    const newProfile = {
-                        name: document.getElementById('p-name').value,
-                        age: document.getElementById('p-age').value,
-                        city: document.getElementById('p-city').value,
-                        profession: document.getElementById('p-profession').value,
-                        caste: document.getElementById('p-caste').value,
-                        details: document.getElementById('p-details').value,
-                        image: compressedBase64,
-                        timestamp: Date.now()
-                    };
-
-                    const newProfileRef = push(profilesRef);
-                    set(newProfileRef, newProfile)
-                        .then(() => {
-                            alert("Profile & Image Added Successfully!");
-                            document.getElementById('add-profile-form').reset();
-                        })
-                        .catch((error) => alert("Error: " + error.message));
-                };
-            };
-            reader.readAsDataURL(file);
-        };
-
-        window.deleteProfile = function(profileId) {
-            if(confirm("Are you sure you want to completely DELETE this profile?")) {
-                remove(ref(db, 'proposals/' + profileId))
-                    .then(() => alert("Profile deleted."))
-                    .catch((err) => alert("Failed: " + err.message));
-            }
-        };
-
-        // ==========================================
-        // 4. INTERACTIVE MAP MODAL LOGIC (WITH CROSS BUTTON)
-        // ==========================================
-        window.openMapModal = function(cityName, personName) {
-            document.getElementById('map-modal-title').innerText = `Location: ${cityName}`;
-            document.getElementById('map-modal-subtitle').innerText = `Showing registered location for ${personName}`;
-            
-            const frameContainer = document.getElementById('map-frame-container');
-            const encodedCity = encodeURIComponent(cityName);
-            frameContainer.innerHTML = `<iframe width="100%" height="100%" style="border:0;" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=34.0%2C12.0%2C55.0%2C33.0&layer=mapnik&marker=${encodedCity}"></iframe>`;
-            
-            document.getElementById('map-modal').style.display = 'flex';
-        };
-
-        window.closeMapModal = function() {
-            document.getElementById('map-modal').style.display = 'none';
-            document.getElementById('map-frame-container').innerHTML = '';
-        };
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('map-modal');
-            if (event.target === modal) {
-                window.closeMapModal();
-            }
-        };
-
-        // ==========================================
-        // 5. SHARE & REPORT LOGIC
-        // ==========================================
-        window.shareProfile = async function(name, age, profession, city) {
-            const shareText = `Check out this Rishta Profile:\n\nName: ${name}\nAge:${age}\nProfession: ${profession}\nLocation:${city}\n\nView more on our Rishta Portal:`;
-            const shareUrl = window.location.href;
-
-            if (navigator.share) {
-                try { await navigator.share({ title: `Rishta Profile: ${name}`, text: shareText, url: shareUrl }); }                  catch (err) { console.error('Error sharing:', err); }             } else {                 const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + "\n" + shareUrl)}`;
-                window.open(waUrl, '_blank');
-            }
-        };
-
-        window.reportProfile = function(profileId, profileName) {
-            const reason = prompt(`Why are you reporting the profile for ${profileName}? \n(e.g., Fake profile, Inappropriate content)`);
-            if (!reason) return; 
-
-            const templateParams = {
-                reported_profile_id: profileId,
-                reported_profile_name: profileName,
-                report_reason: reason,
-                portal_url: window.location.href
-            };
-
-            emailjs.send('service_yzk2m6f', 'template_i9nwegh', templateParams)
-                .then(() => alert('Report submitted successfully. The admin will review it.'))
-                .catch(() => alert('Failed to send report. Please try again.'));
-        };
-
-        // ==========================================
-        // 6. SEARCH & FILTER LOGIC
-        // ==========================================
-        window.filterProfiles = function() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const filtered = globalProfilesData.filter(profile => {
-                const name = (profile.name || '').toLowerCase();
-                const city = (profile.city || '').toLowerCase();
-                const profession = (profile.profession || '').toLowerCase();
-                const caste = (profile.caste || '').toLowerCase();
-                return name.includes(query) || city.includes(query) || profession.includes(query) || caste.includes(query);
-            });
-            renderProfiles(filtered);
-        };
-
-        // ==========================================
-        // 7. RENDER PROFILES TO UI
-        // ==========================================
-        function renderProfiles(profilesArray) {
-            const container = document.getElementById('profiles-container');
-            container.innerHTML = ''; 
-
-            if (profilesArray.length === 0) {
-                container.innerHTML = '<div class="loading-text">No profiles found matching your search.</div>';
-                return;
-            }
-
-            profilesArray.forEach(profile => {
-                const card = document.createElement('div');
-                card.className = 'profile-card';
-                
-                const deleteBtnHTML = isAdmin 
-                    ? `<button class="btn-delete" style="display:block;" onclick="window.deleteProfile('${profile.id}')">🗑️ Delete Profile</button>` 
-                    : ``;
-
-                const imgSrc = profile.image || 'https://via.placeholder.com/300x220?text=No+Photo';
-
-                card.innerHTML = `
-                    <div>
-                        <img src="${imgSrc}" class="profile-img" alt="Profile Image">
-                        <h3>${profile.name || 'No Name'}</h3>
-                        <p><strong>Age:</strong> ${profile.age || 'N/A'}</p>
-                        <p><strong>City:</strong> ${profile.city || 'N/A'}</p>
-                        <p><strong>Profession:</strong> ${profile.profession || 'N/A'}</p>
-                        <p><strong>Caste/Sect:</strong> ${profile.caste || 'N/A'}</p>
-                        <p><strong>Details:</strong> ${profile.details || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <button class="btn-map" onclick="window.openMapModal('${profile.city || 'Riyadh'}', '${profile.name}')">📍 View Location Map</button>
-                        <div class="card-actions">
-                            <button class="btn-share" onclick="window.shareProfile('${profile.name}', '${profile.age}', '${profile.profession}', '${profile.city}')">📲 Share</button>
-                            <button class="btn-report" onclick="window.reportProfile('${profile.id}', '${profile.name}')">⚠️ Report</button>
+                    card.innerHTML = `
+                        <i class="far fa-bookmark bookmark-icon" onclick="this.classList.toggle('fas'); this.classList.toggle('far');"></i>
+                        
+                        <div class="card-header">
+                            <img src="${profile.image || 'https://via.placeholder.com/150'}" class="profile-thumbnail" alt="Profile">
+                            <div class="profile-info">
+                                <div class="profile-name">${profile.name || 'Anonymous User'}</div>
+                                <div class="profile-location">
+                                    <i class="fas fa-map-marker-alt pin-icon"></i> ${cityHTML}
+                                </div>
+                                <div class="profile-stats">${profile.stats || 'N/A'}</div>
+                                <div class="profile-profession">${profile.profession || 'Not specified'}</div>
+                            </div>
                         </div>
-                        ${deleteBtnHTML}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
 
-        // ==========================================
-        // 8. LIVE FIREBASE LISTENER
-        // ==========================================
-        onValue(profilesRef, (snapshot) => {
+                        <div class="quote-box">
+                            "${profile.quote || 'No bio provided yet.'}"
+                        </div>
+
+                        <div class="card-actions">
+                            <div class="actions-left">
+                                <div class="tag-profession">${shortProf}</div>
+                                ${adminButtons}
+                            </div>
+                            <div class="actions-right">
+                                <button class="btn-pill btn-contact" onclick="app.contactProfile('${profile.name}', '${profile.profession}', '${profile.city}')">
+                                    <i class="fab fa-whatsapp"></i> Contact
+                                </button>
+                                <button class="btn-pill btn-details" onclick="app.reportProfile('${profile.id}', '${profile.name}')">
+                                    Details
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-pill btn-map-full" onclick="app.openMapModal('${profile.city}', '${profile.name}')">
+                            <i class="fas fa-map"></i> View on Map
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        };
+
+        // Close Map modal if clicking outside the white box
+        window.onclick = function(event) {
+            const modal = document.getElementById('location-modal');
+            if (event.target === modal) {
+                app.closeMapModal();
+            }
+        };
+
+        // Initialize Firebase Listener to keep data live
+        onValue(databaseRef, (snapshot) => {
             const data = snapshot.val();
-            const profilesArray = [];
-            
+            const tempArray = [];
             if (data) {
                 for (let id in data) {
-                    profilesArray.push({ id: id, ...data[id] });
+                    tempArray.push({ id: id, ...data[id] });
                 }
             }
-            globalProfilesData = profilesArray.reverse(); 
-            window.filterProfiles(); // Keep search box responsive when new data arrives
+            // Reverse so newest profiles show at the top
+            app.profilesData = tempArray.reverse();
+            app.renderProfiles();
         });
 
     </script>
